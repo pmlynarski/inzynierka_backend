@@ -9,7 +9,7 @@ from grouper import settings
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, first_name, last_name, email, is_staff=False, is_admin=False, is_active=True, password=None):
+    def create_user(self, first_name, last_name, email, is_staff=False, is_admin=False, is_active=False, password=None):
         if not email:
             raise ValueError("An email address is required")
         if not password:
@@ -42,7 +42,7 @@ class User(AbstractBaseUser):
     email = models.EmailField(max_length=255, unique=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
-    active = models.BooleanField(default=True)
+    active = models.BooleanField(default=False)
     admin = models.BooleanField(default=False)
     staff = models.BooleanField(default=False)
     lecturer = models.BooleanField(default=False)
