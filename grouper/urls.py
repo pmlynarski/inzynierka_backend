@@ -15,10 +15,17 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from rest_framework import routers
 from rest_framework.authtoken import views
 
+from users import views as users_views
+
+router = routers.SimpleRouter()
+router.register(r'users', users_views.UsersViewSet)
+
 urlpatterns = [
+    path('', include(router.urls)),
     path('admin/', admin.site.urls),
     url(r'^login/', views.obtain_auth_token)
 ]
