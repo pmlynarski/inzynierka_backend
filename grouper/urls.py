@@ -20,11 +20,13 @@ from rest_framework import routers
 from rest_framework.authtoken import views
 
 from groups import views as groups_views
+from posts import views as posts_views
 from users import views as users_views
 
 router = routers.SimpleRouter()
 router.register(r'users', users_views.UsersViewSet)
 router.register(r'groups', groups_views.GroupViewSet)
+router.register(r'posts', posts_views.PostsViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
