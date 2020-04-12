@@ -6,8 +6,8 @@ from users.serializers import UserSerializer
 
 
 class PostSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(many=False, read_only=False)
-    group = GroupSerializer(many=False, read_only=False)
+    owner = UserSerializer(many=False, read_only=True)
+    group = GroupSerializer(many=False, read_only=True)
 
     class Meta:
         model = Post
@@ -15,7 +15,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(many=False, read_only=False)
+    owner = UserSerializer(many=False, read_only=True)
 
     class Meta:
         model = Comment
