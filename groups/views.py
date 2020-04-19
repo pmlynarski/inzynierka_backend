@@ -18,7 +18,7 @@ class GroupViewSet(viewsets.GenericViewSet):
         try:
             search_phrase = request.GET['phrase']
         except MultiValueDictKeyError:
-            return response406({'message': 'Wrong search key'})
+            return response406({'message': 'Złe dane wejściowe'})
         groups = Group.objects.filter(name__contains=search_phrase)
         groups_data = GroupSerializer(groups, many=True).data
         paginator = PageNumberPagination()
@@ -29,7 +29,7 @@ class GroupViewSet(viewsets.GenericViewSet):
     def create_group(self, request):
         serializer = GroupSerializer(data=request.data, partial=True)
         if not serializer.is_valid():
-            return response406({**serializer.errors, 'message': 'Invalid input data'})
+            return response406({**serializer.errors, 'message': 'Złe dane wejściowe'})
         serializer.save(owner=request.user)
         return response200(data=serializer.data)
 
@@ -39,7 +39,7 @@ class GroupViewSet(viewsets.GenericViewSet):
             group = Group.objects.get(id=kwargs.get('pk'))
         except Group.DoesNotExist:
             return response404('Group')
-        return response200(GroupSerializer(group).data)
+        return response200({**GroupSerializer(group).data, 'message': 'Pomyślnie dodano grupę'})
 
     @action(methods=['PUT'], detail=False, url_name='update_group', url_path=r'update/(?P<id>\d+)')
     def update_group(self, request, **kwargs):
@@ -50,9 +50,9 @@ class GroupViewSet(viewsets.GenericViewSet):
         self.check_object_permissions(request=request, obj=group)
         serializer = GroupSerializer(group, data=request.data, partial=True)
         if not serializer.is_valid():
-            return response406({**serializer.errors, 'message': 'Validation error'})
+            return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.save()
-        return response200(data={**serializer.data, 'message': 'Successfully updated group'})
+        return response200(data={**serializer.data, 'message': 'Pomyślnie zaktualizowano grupę'})
 
     @action(methods=['DELETE'], detail=False, url_name='delete_group', url_path=r'delete/(?P<id>\d+)')
     def delete_group(self, request, **kwargs):
@@ -62,7 +62,7 @@ class GroupViewSet(viewsets.GenericViewSet):
             return response404('Group')
         self.check_object_permissions(request=request, obj=group)
         group.delete()
-        return response200({'message': 'Group has been successfully deleted'})
+        return response200({'message': 'Pomyślnie usunięto grupę'})
 
     @action(methods=['POST'], detail=False, url_name='leave_group', url_path=r'leave/(?P<id>\d+)')
     def leave_group(self, request, **kwargs):
@@ -73,7 +73,7 @@ class GroupViewSet(viewsets.GenericViewSet):
         self.check_object_permissions(request=request, obj=group)
         group.members.remove(request.user)
         group.save()
-        return response200({'message': 'You successfully left the group'})
+        return response200({'message': 'Pomyślnie opuściłeś grupę'})
 
     @action(methods=['POST'], detail=False, url_name='drop_member', url_path=r'drop/(?P<id>\d+)')
     def drop_member(self, request, **kwargs):
@@ -83,11 +83,11 @@ class GroupViewSet(viewsets.GenericViewSet):
         except Group.DoesNotExist:
             return response404('Group')
         except MultiValueDictKeyError:
-            return response406({'message': 'Wrong parameters'})
+            return response406({'message': 'Złę dane wejściowe'})
         self.check_object_permissions(request=request, obj=group)
         group.members.remove(user)
         group.save()
-        return response200({'message': 'Successfully dropped user from group'})
+        return response200({'message': 'Pomyślnie usunięto użytkownika z grupy'})
 
     @action(methods=['POST'], detail=False, url_name='join_group', url_path=r'join/(?P<id>\d+)')
     def join_group(self, request, **kwargs):
@@ -97,9 +97,10 @@ class GroupViewSet(viewsets.GenericViewSet):
             return response404('Group')
         pending = PendingMember.objects.create(user=request.user, group=group)
         serializer = PendingMembersSerializer(pending)
-        return response200({**serializer.data, 'message': 'Successfully signed in to pending list'})
+        return response200({**serializer.data, 'message': 'Pomyślnie zapisano się na listę oczekujących'})
 
-    @action(methods=['POST'], detail=False, url_name='accept_pending_member', url_path=r'accept/(?P<id>\d+)')
+    @action(methods=['POST', 'DELETE'], detail=False, url_name='manage_pending_member',
+            url_path=r'manage-pending/(?P<id>\d+)')
     def accept_pending_member(self, request, **kwargs):
         try:
             group = Group.objects.get(**kwargs)
@@ -109,28 +110,19 @@ class GroupViewSet(viewsets.GenericViewSet):
         except PendingMember.DoesNotExist:
             return response404('Pending member')
         self.check_object_permissions(request=request, obj=group)
-        group.members.add(pending.user)
+        if request.method == 'POST':
+            group.members.add(pending.user)
+            message = 'Pomyślnie zaakceptowano użytkownika'
+        else:
+            message = 'Pomyślnie odrzucono użytkownika'
         pending.delete()
-        return response200({'message': 'Successfully accepted user'})
-
-    @action(methods=['POST'], detail=False, url_name='accept_pending_member', url_path=r'decline/(?P<id>\d+)')
-    def decline_pending_member(self, request, **kwargs):
-        try:
-            group = Group.objects.get(**kwargs)
-            pending = PendingMember.objects.get(**request.data, group=group)
-        except Group.DoesNotExist:
-            return response404('Group')
-        except PendingMember.DoesNotExist:
-            return response404('Pending member')
-        self.check_object_permissions(request=request, obj=group)
-        pending.delete()
-        return response200({'message': 'Successfully declined user'})
+        return response200({'message': message})
 
     def get_permissions(self):
         action_types = [
             {
                 'class': IsOwnerOrIsModerator,
-                'values': ['update_group', 'drop_member', 'accept_pending_member', 'decline_pending_member']
+                'values': ['update_group', 'drop_member', 'manage_pending_member', 'decline_pending_member']
             },
             {
                 'class': IsOwner,

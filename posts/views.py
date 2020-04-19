@@ -42,9 +42,9 @@ class PostsViewSet(viewsets.GenericViewSet):
         self.check_object_permissions(request=request, obj=group)
         serializer = PostSerializer(data=request.data, partial=True)
         if not serializer.is_valid():
-            return response406({**serializer.errors, 'message': 'Validation error'})
+            return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.save(group=group)
-        return response200({**serializer.data, 'message': 'Successfully created post'})
+        return response200({**serializer.data, 'message': 'Pomyślnie utworzono post'})
 
     @action(methods=['GET'], detail=True, url_name='post_details')
     def get_post(self, request, **kwargs):
@@ -64,9 +64,9 @@ class PostsViewSet(viewsets.GenericViewSet):
         self.check_object_permissions(request=request, obj=post)
         serializer = PostSerializer(post, data=request.data, partial=True)
         if not serializer.is_valid():
-            return response406({**serializer.errors, 'message': 'Validation error'})
+            return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.save()
-        return response200({**serializer.data, 'message': 'Successfully updated post'})
+        return response200({**serializer.data, 'message': 'Pomyślnie zaktualizowano posta'})
 
     @action(methods=['DELETE'], detail=False, url_name='post_delete', url_path=r'delete/(?P<id>\d+)')
     def delete_post(self, request, **kwargs):
@@ -76,7 +76,7 @@ class PostsViewSet(viewsets.GenericViewSet):
             return response404('Post')
         self.check_object_permissions(request=request, obj=post)
         post.delete()
-        return response200({'message': 'Successfully deleted post'})
+        return response200({'message': 'Pomyślnie usunięto posta'})
 
     @action(methods=['POST'], detail=False, url_name='create_comment', url_path=r'create/(?P<id>\d+)/comment')
     def create_comment(self, request, **kwargs):
@@ -86,9 +86,9 @@ class PostsViewSet(viewsets.GenericViewSet):
             return response404('Post')
         serializer = CommentSerializer(data=request.data, partial=True)
         if not serializer.is_valid():
-            return response406({**serializer.errors, 'message': 'Validation error'})
+            return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.save(post=post)
-        return response200({**serializer.data, 'message': 'Successfully created comment'})
+        return response200({**serializer.data, 'message': 'Pomyślnie utworzono komentarz'})
 
     @action(methods=['GET'], detail=False, url_name='comment_details', url_path=r'get/(?P<id>\d+)/comment')
     def get_comment(self, request, **kwargs):
@@ -108,9 +108,9 @@ class PostsViewSet(viewsets.GenericViewSet):
         serializer = CommentSerializer(comment, data=request.data, partial=True)
         self.check_object_permissions(request=request, obj=comment)
         if not serializer.is_valid():
-            return response406({**serializer.errors, 'message': 'Validation error'})
+            return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.save()
-        return response200({**serializer.data, 'message': 'Successfully updated comment'})
+        return response200({**serializer.data, 'message': 'Pomyślnie zaktualizowano komentarz'})
 
     @action(methods=['DELETE'], detail=False, url_name='post_delete', url_path=r'delete/(?P<id>\d+)')
     def delete_comment(self, request, **kwargs):
@@ -120,7 +120,7 @@ class PostsViewSet(viewsets.GenericViewSet):
             return response404('Post')
         self.check_object_permissions(request=request, obj=comment)
         comment.delete()
-        return response200({'message': 'Successfully deleted comment'})
+        return response200({'message': 'Pomyślnie usunięto posta'})
 
     def get_permissions(self):
         action_types = [
