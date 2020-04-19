@@ -1,40 +1,23 @@
 import json
 
 from django.urls import reverse
-from rest_framework.test import APITestCase, APIClient
 
-from users.models import User
+from core.utils import IAPITestCase
 
 
-class UserAppIntegrationTest(APITestCase):
-    counter = 1
+class UserAppIntegrationTest(IAPITestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(UserAppIntegrationTest, cls).setUpClass()
+        super().setUpClass()
         print('\n  -------------- Integracyjne testy panelu użytkownika -------------- \n ')
 
     @classmethod
     def setUpTestData(cls):
-        cls.client = APIClient()
-        cls.test_user = User.objects.create(email='foo@foo.foo', first_name='Foo', last_name='Bar',
-                                            password='1234567890', active=True)
-        cls.test_inactive_user = User.objects.create(email='bar@bar.bar', first_name='Bar', last_name='Foo',
-                                                     password='1234567890')
-        cls.test_admin = User.objects.create_superuser(email='admin@admin.admin', first_name='Admin',
-                                                       last_name='Tester',
-                                                       password='1234567890')
-
+        super().setUpTestData()
         cls.basic_data = {'password': 'testPassword',
                           'first_name': 'FooBar',
                           'last_name': 'BarrFoo'}
-
-    def setUp(self):
-        print('\n  -------------- Test nr {}-------------- \n '.format(self.counter))
-
-    @classmethod
-    def tearDown(cls):
-        cls.counter += 1
 
     def test_register_endpoint_proper_data(self):
         data = {
