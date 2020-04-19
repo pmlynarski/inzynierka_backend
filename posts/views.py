@@ -126,7 +126,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         action_types = [
             {'class': IsOwnerOrIsMember,
              'values': ['groups_posts_list', 'create_post', 'get_post', 'create_comment', 'get_comment']},
-            {'class': IsOwner, 'values': ['groups_posts_list', 'create_post', 'get_post', 'update_comment']},
+            {'class': IsOwner, 'values': ['update_post', 'update_comment']},
             {'class': IsOwnerOrIsModerator, 'values': ['delete_post', 'delete_comment']}
         ]
         self.permission_classes = set_basic_permissions(self.action, action_types)

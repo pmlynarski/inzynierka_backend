@@ -40,7 +40,7 @@ class IsOwnerOrIsMember(permissions.BasePermission):
 class IsAdmin(permissions.BasePermission):
     message = 'Musisz być administratorem by wykonać tą akcję'
 
-    def has_object_permission(self, request, view, obj):
+    def has_permission(self, request, view):
         return request.user.is_admin
 
 

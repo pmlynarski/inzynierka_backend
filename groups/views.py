@@ -122,7 +122,7 @@ class GroupViewSet(viewsets.GenericViewSet):
         action_types = [
             {
                 'class': IsOwnerOrIsModerator,
-                'values': ['update_group', 'drop_member', 'manage_pending_member', 'decline_pending_member']
+                'values': ['update_group', 'drop_member', 'manage_pending_member']
             },
             {
                 'class': IsOwner,

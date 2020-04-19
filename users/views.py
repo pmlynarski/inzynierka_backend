@@ -13,20 +13,18 @@ class UsersViewSet(viewsets.GenericViewSet):
 
     def get_permissions(self):
         admin_actions = ['accept_user', 'unaccepted_users']
-        permission_classes = []
+        self.permission_classes = [IsAuthenticated]
         if self.action == 'register':
-            permission_classes = [AllowAny]
+            self.permission_classes = [AllowAny]
         if self.action in admin_actions:
-            permission_classes = [*permission_classes, IsAdmin]
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
+            self.permission_classes = [*self.permission_classes, IsAdmin]
+        return [permission() for permission in self.permission_classes]
 
     @action(detail=False, methods=['post'], url_name='register', url_path='register')
     def register(self, request):
         serializer = UserSerializer(data=request.data)
         if not serializer.is_valid():
-            return response406(serializer.data)
+            return response406(serializer.errors)
         serializer.save()
         return response200(serializer.data)
 
@@ -44,17 +42,16 @@ class UsersViewSet(viewsets.GenericViewSet):
             instance = User.objects.get(id=kwargs.get('id'))
         except User.DoesNotExist:
             return response404('User')
-        serializer = UserSerializer(instance=instance, data={'active': True})
+        serializer = UserSerializer(instance=instance, data={'active': True}, partial=True)
         if not serializer.is_valid():
-            return response406({'message': 'Złe dane wejściowe'})
+            return response406({**serializer.errors, 'message': 'Złe dane wejściowe'})
         serializer.save()
         return response200({'message': 'Pomyślnie aktywowano użytkownika'})
 
     @action(detail=False, methods=['GET'], url_name='unaccepted_users', url_path='unaccepted_users')
     def unaccepted_users(self, request):
-        try:
-            users = User.objects.filter(active=False)
-        except User.DoesNotExist:
+        users = User.objects.filter(active=False)
+        if len(users) == 0:
             return response404('Users')
         serializer = UserSerializer(users, many=True)
         return response200(serializer.data)
