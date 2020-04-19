@@ -12,10 +12,11 @@ class UsersViewSet(viewsets.GenericViewSet):
     queryset = User.objects.all()
 
     def get_permissions(self):
+        admin_actions = ['accept_user', 'unaccepted_users']
         permission_classes = []
         if self.action == 'register':
             permission_classes = [AllowAny]
-        if self.action == 'accept_user':
+        if self.action in admin_actions:
             permission_classes = [*permission_classes, IsAdmin]
         else:
             permission_classes = [IsAuthenticated]
@@ -37,10 +38,10 @@ class UsersViewSet(viewsets.GenericViewSet):
         serializer.save()
         return response200(serializer.data)
 
-    @action(detail=False, methods=['POST'], url_name='accept_user', url_path='accept')
-    def accept_user(self, request):
+    @action(detail=False, methods=['POST'], url_name='accept_user', url_path=r'accept/(?P<id>\d+)')
+    def accept_user(self, request, **kwargs):
         try:
-            instance = User.objects.get(id=id)
+            instance = User.objects.get(id=kwargs.get('id'))
         except User.DoesNotExist:
             return response404('User')
         serializer = UserSerializer(instance=instance, data={'active': True})
@@ -48,3 +49,12 @@ class UsersViewSet(viewsets.GenericViewSet):
             return response406({'message': 'Złe dane wejściowe'})
         serializer.save()
         return response200({'message': 'Pomyślnie aktywowano użytkownika'})
+
+    @action(detail=False, methods=['GET'], url_name='unaccepted_users', url_path='unaccepted_users')
+    def unaccepted_users(self, request):
+        try:
+            users = User.objects.filter(active=False)
+        except User.DoesNotExist:
+            return response404('Users')
+        serializer = UserSerializer(users, many=True)
+        return response200(serializer.data)
