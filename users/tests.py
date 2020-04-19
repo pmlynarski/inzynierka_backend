@@ -28,7 +28,7 @@ class UserAppIntegrationTest(IAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content), {'email': 'testEmail@email.com',
                                                         'first_name': 'FooBar',
-                                                        'id': 4,
+                                                        'id': 7,
                                                         'is_admin': False,
                                                         'is_lecturer': False,
                                                         'last_name': 'BarrFoo'})
