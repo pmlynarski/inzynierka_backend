@@ -9,7 +9,7 @@ class Group(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owner')
     moderator = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='moderator', null=True)
     members = models.ManyToManyField(User, related_name='members')
-    photo = models.ImageField(upload_to=MEDIA_ROOT)
+    image = models.ImageField(upload_to=MEDIA_ROOT)
 
 
 class PendingMember(models.Model):

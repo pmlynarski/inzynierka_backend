@@ -11,7 +11,7 @@ from grouper.settings import MEDIA_ROOT
 class UserManager(BaseUserManager):
 
     def create_user(self, first_name, last_name, email, is_admin=False, is_active=False,
-                    is_lecturer=False, password=None):
+                    is_lecturer=False, password=None, image=None):
         if not email:
             raise ValueError("An email address is required")
         if not password:
@@ -25,6 +25,7 @@ class UserManager(BaseUserManager):
         user_obj.admin = is_admin
         user_obj.active = is_active
         user_obj.lecturer = is_lecturer
+        user_obj.image = image
         user_obj.save()
         return user_obj
 
@@ -48,7 +49,7 @@ class User(AbstractBaseUser):
     admin = models.BooleanField(default=False)
     lecturer = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to=MEDIA_ROOT, default=None)
+    image = models.ImageField(upload_to=MEDIA_ROOT, null=True, default=None)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 

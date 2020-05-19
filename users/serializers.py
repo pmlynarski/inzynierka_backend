@@ -4,6 +4,8 @@ from users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField('get_image')
+
     class Meta:
         model = User
         fields = ['id', 'email', 'first_name', 'last_name', 'is_admin', 'is_lecturer', 'password', 'image']
@@ -28,3 +30,8 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(raw_password=validated_data.get('password'))
         instance.save()
         return instance
+
+    def get_image(self, instance):
+        if instance.image:
+            return 'http://' + self.context.get('host') + instance.image
+        return None

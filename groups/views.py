@@ -21,14 +21,14 @@ class GroupViewSet(viewsets.GenericViewSet):
         except MultiValueDictKeyError:
             return response406({'message': 'Złe dane wejściowe'})
         groups = Group.objects.filter(name__contains=search_phrase)
-        groups_data = GroupSerializer(groups, many=True).data
+        groups_data = GroupSerializer(groups, many=True, context={'host': request.get_host}).data
         paginator = PageNumberPagination()
         data = paginator.paginate_queryset(groups_data, request)
         return paginator.get_paginated_response(data)
 
     @action(methods=['POST'], detail=False, url_name='create_group', url_path='create')
     def create_group(self, request):
-        serializer = GroupSerializer(data=request.data, partial=True)
+        serializer = GroupSerializer(data=request.data, partial=True, context={'host': request.get_host})
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Złe dane wejściowe'})
         serializer.save(owner=request.user)
@@ -40,7 +40,8 @@ class GroupViewSet(viewsets.GenericViewSet):
             group = Group.objects.get(id=kwargs.get('pk'))
         except Group.DoesNotExist:
             return response404('Group')
-        return response200({**GroupSerializer(group).data, 'message': 'Pomyślnie dodano grupę'})
+        return response200(
+            {**GroupSerializer(group, context={'host': request.get_host}).data, 'message': 'Pomyślnie dodano grupę'})
 
     @action(methods=['PUT'], detail=False, url_name='update_group', url_path=r'update/(?P<id>\d+)')
     def update_group(self, request, **kwargs):
@@ -49,7 +50,7 @@ class GroupViewSet(viewsets.GenericViewSet):
         except Group.DoesNotExist:
             return response404('Group')
         self.check_object_permissions(request=request, obj=group)
-        serializer = GroupSerializer(group, data=request.data, partial=True)
+        serializer = GroupSerializer(group, data=request.data, partial=True, context={'host': request.get_host})
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.save()
@@ -99,7 +100,7 @@ class GroupViewSet(viewsets.GenericViewSet):
         if request.user in group.members.all() or request.user == group.owner:
             return response406({'message': 'Jesteś już członkiem tej grupy'})
         pending = PendingMember.objects.create(user=request.user, group=group)
-        serializer = PendingMembersSerializer(pending)
+        serializer = PendingMembersSerializer(pending, context={'host': request.get_host})
         return response200({**serializer.data, 'message': 'Pomyślnie zapisano się na listę oczekujących'})
 
     @action(methods=['POST', 'DELETE'], detail=False, url_name='manage_pending_member',
