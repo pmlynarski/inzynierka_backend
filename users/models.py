@@ -5,6 +5,7 @@ from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
 from grouper import settings
+from grouper.settings import MEDIA_ROOT
 
 
 class UserManager(BaseUserManager):
@@ -47,6 +48,7 @@ class User(AbstractBaseUser):
     admin = models.BooleanField(default=False)
     lecturer = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
+    image = models.ImageField(upload_to=MEDIA_ROOT, default=None)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 

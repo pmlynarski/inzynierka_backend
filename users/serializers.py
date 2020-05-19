@@ -6,7 +6,7 @@ from users.models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'is_admin', 'is_lecturer', 'password']
+        fields = ['id', 'email', 'first_name', 'last_name', 'is_admin', 'is_lecturer', 'password', 'image']
         read_only_fields = ['id', 'is_admin', 'is_lecturer']
         extra_kwargs = {'password': {'write_only': True}}
 
@@ -16,6 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
             password=validated_data['password'],
+            image=None
         )
         return user
 

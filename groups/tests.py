@@ -28,6 +28,11 @@ class GroupAppIntegrationTests(IAPITestCase):
         self.assertEqual(len(json.loads(response.content)['results']), 1)
         self.assertEqual(response.status_code, 200)
 
+    def test_searching_for_groups_wrong_data(self):
+        self.client.force_authenticate(self.test_user)
+        response = self.client.get(reverse('group-search'))
+        self.assertEqual(response.status_code, 406)
+
     def test_create_group_admin(self):
         proper_data = {
             'id': 2, 'name': '',
