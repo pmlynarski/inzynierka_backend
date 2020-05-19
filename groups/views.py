@@ -3,7 +3,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 
-from core.permissions import IsLecturerOrIsAdmin, IsOwnerOrIsModerator, IsOwner, IsMember, set_basic_permissions
+from core.permissions import IsLecturerOrIsAdmin, IsOwnerOrIsModerator, IsMember, set_basic_permissions, \
+    IsOwnerOrIsAdmin
 from core.responses import response200, response406, response404
 from groups.models import Group, PendingMember
 from groups.serializers import GroupSerializer, PendingMembersSerializer
@@ -79,11 +80,11 @@ class GroupViewSet(viewsets.GenericViewSet):
     def drop_member(self, request, **kwargs):
         try:
             group = Group.objects.get(**kwargs)
-            user = User.objects.get(request.data['id'])
+            user = User.objects.get(id=request.data['id'])
         except Group.DoesNotExist:
             return response404('Group')
         except MultiValueDictKeyError:
-            return response406({'message': 'Złę dane wejściowe'})
+            return response406({'message': 'Złe dane wejściowe'})
         self.check_object_permissions(request=request, obj=group)
         group.members.remove(user)
         group.save()
@@ -95,20 +96,22 @@ class GroupViewSet(viewsets.GenericViewSet):
             group = Group.objects.get(**kwargs)
         except Group.DoesNotExist:
             return response404('Group')
+        if request.user in group.members.all() or request.user == group.owner:
+            return response406({'message': 'Jesteś już członkiem tej grupy'})
         pending = PendingMember.objects.create(user=request.user, group=group)
         serializer = PendingMembersSerializer(pending)
         return response200({**serializer.data, 'message': 'Pomyślnie zapisano się na listę oczekujących'})
 
     @action(methods=['POST', 'DELETE'], detail=False, url_name='manage_pending_member',
             url_path=r'manage-pending/(?P<id>\d+)')
-    def accept_pending_member(self, request, **kwargs):
+    def manage_pending_member(self, request, **kwargs):
         try:
             group = Group.objects.get(**kwargs)
-            pending = PendingMember.objects.get(**request.data, group=group)
+            pending = PendingMember.objects.get(id=request.data['id'], group=group)
         except Group.DoesNotExist:
             return response404('Group')
         except PendingMember.DoesNotExist:
-            return response404('Pending member')
+            return response404('Użytkownik nie znaleziony')
         self.check_object_permissions(request=request, obj=group)
         if request.method == 'POST':
             group.members.add(pending.user)
@@ -122,10 +125,10 @@ class GroupViewSet(viewsets.GenericViewSet):
         action_types = [
             {
                 'class': IsOwnerOrIsModerator,
-                'values': ['update_group', 'drop_member', 'manage_pending_member', 'decline_pending_member']
+                'values': ['update_group', 'drop_member', 'manage_pending_member']
             },
             {
-                'class': IsOwner,
+                'class': IsOwnerOrIsAdmin,
                 'values': ['delete_group']
             },
             {
