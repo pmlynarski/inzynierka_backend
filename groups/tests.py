@@ -34,10 +34,9 @@ class GroupAppIntegrationTests(IAPITestCase):
         self.assertEqual(response.status_code, 406)
 
     def test_create_group_admin(self):
-        proper_data = {
-            'id': 2, 'name': '',
-            'owner': {'id': 4, 'email': 'admin@admin.admin', 'first_name': 'Admin', 'last_name': 'Tester',
-                      'is_admin': True, 'is_lecturer': False}, 'members': []}
+        proper_data = {'id': 2, 'name': '',
+                       'owner': {'id': 4, 'email': 'admin@admin.admin', 'first_name': 'Admin', 'last_name': 'Tester',
+                                 'is_admin': True, 'is_lecturer': False, 'image': None}, 'members': [], 'image': None}
         self.client.force_authenticate(self.test_admin)
         response = self.client.post(reverse('group-create_group'), data=self.base_data)
         self.assertEqual(json.loads(response.content), proper_data)
@@ -46,7 +45,7 @@ class GroupAppIntegrationTests(IAPITestCase):
     def test_create_group_lecturer(self):
         proper_data = {'id': 2, 'name': '',
                        'owner': {'id': 3, 'email': 'foo@lecturer.bar', 'first_name': 'Lecturer', 'last_name': 'Tester',
-                                 'is_admin': False, 'is_lecturer': True}, 'members': []}
+                                 'is_admin': False, 'is_lecturer': True, 'image': None}, 'members': [], 'image': None}
 
         self.client.force_authenticate(self.test_lecturer)
         response = self.client.post(reverse('group-create_group'), data=self.base_data)

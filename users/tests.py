@@ -31,7 +31,8 @@ class UserAppIntegrationTest(IAPITestCase):
                                                         'id': 7,
                                                         'is_admin': False,
                                                         'is_lecturer': False,
-                                                        'last_name': 'BarrFoo'})
+                                                        'last_name': 'BarrFoo',
+                                                        'image': None})
 
     def test_register_endpoint_invalid_data(self):
         data = {
@@ -48,7 +49,7 @@ class UserAppIntegrationTest(IAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content),
                          {'id': 1, 'email': 'foo@foo.foo', 'first_name': 'FooBar', 'last_name': 'BarrFoo',
-                          'is_admin': False, 'is_lecturer': False})
+                          'is_admin': False, 'is_lecturer': False, 'image': None})
 
     def test_update_profile_invalid_data(self):
         self.client.force_authenticate(user=self.test_user)
