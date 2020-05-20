@@ -2,7 +2,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 
-from core.permissions import IsOwnerOrIsMember, IsOwner, IsOwnerOrIsModerator, set_basic_permissions
+from core.permissions import IsOwnerOrIsMember, IsOwner, set_basic_permissions, \
+    IsPostOwnerOrIsGroupOwner, IsCommentOwnerOrIsGroupOwner
 from core.responses import response406, response200, response404
 from groups.models import Group
 from posts.models import Post, Comment
@@ -27,14 +28,14 @@ class PostsViewSet(viewsets.GenericViewSet):
 
     @action(methods=['GET'], detail=False, url_name="user_post_list", url_path='')
     def user_posts_list(self, request, **kwargs):
-        posts = Post.objects.filter(group__members_in=request.user) | Post.objects.filter(group__owner=request.user)
+        posts = Post.objects.filter(group__members=request.user) | Post.objects.filter(group__owner=request.user)
         serializer = PostSerializer(posts, many=True, context={'host': request.get_host})
         paginator = PageNumberPagination()
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
 
     @action(methods=['POST'], detail=False, url_name='create_post', url_path=r'create/(?P<id>\d+)')
-    def create_post(self, request, kwargs):
+    def create_post(self, request, **kwargs):
         try:
             group = Group.objects.get(**kwargs)
         except Group.DoesNotExist:
@@ -43,7 +44,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         serializer = PostSerializer(data=request.data, partial=True, context={'host': request.get_host})
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
-        serializer.save(group=group)
+        serializer.save(group=group, owner=request.user)
         return response200({**serializer.data, 'message': 'Pomyślnie utworzono post'})
 
     @action(methods=['GET'], detail=True, url_name='post_details')
@@ -55,7 +56,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         self.check_object_permissions(request=request, obj=post.group)
         return response200(PostSerializer(post, context={'host': request.get_host}).data)
 
-    @action(methods=['PUT'], detail=False, url_name='post_delete', url_path=r'update/(?P<id>\d+)')
+    @action(methods=['PUT'], detail=False, url_name='post_update', url_path=r'update/(?P<id>\d+)')
     def update_post(self, request, **kwargs):
         try:
             post = Post.objects.get(**kwargs)
@@ -87,19 +88,10 @@ class PostsViewSet(viewsets.GenericViewSet):
         serializer = CommentSerializer(data=request.data, partial=True, context={'host': request.get_host})
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
-        serializer.save(post=post)
+        serializer.save(post=post, owner=request.user)
         return response200({**serializer.data, 'message': 'Pomyślnie utworzono komentarz'})
 
-    @action(methods=['GET'], detail=False, url_name='comment_details', url_path=r'get/(?P<id>\d+)/comment')
-    def get_comment(self, request, **kwargs):
-        try:
-            comment = Comment.objects.get(id=kwargs.get('pk'))
-        except Comment.DoesNotExist:
-            return response404('Comment')
-        self.check_object_permissions(request=request, obj=comment.post.group)
-        return response200(CommentSerializer(comment, context={'host': request.get_host}).data)
-
-    @action(methods=['PUT'], detail=False, url_name='comment_delete', url_path=r'delete/(?P<id>\d+)/comment')
+    @action(methods=['PUT'], detail=False, url_name='comment_update', url_path=r'update/(?P<id>\d+)/comment')
     def update_comment(self, request, **kwargs):
         try:
             comment = Comment.objects.get(**kwargs)
@@ -112,7 +104,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         serializer.save()
         return response200({**serializer.data, 'message': 'Pomyślnie zaktualizowano komentarz'})
 
-    @action(methods=['DELETE'], detail=False, url_name='post_delete', url_path=r'delete/(?P<id>\d+)')
+    @action(methods=['DELETE'], detail=False, url_name='comment_delete', url_path=r'delete/comment/(?P<id>\d+)')
     def delete_comment(self, request, **kwargs):
         try:
             comment = Comment.objects.get(**kwargs)
@@ -127,7 +119,8 @@ class PostsViewSet(viewsets.GenericViewSet):
             {'class': IsOwnerOrIsMember,
              'values': ['groups_posts_list', 'create_post', 'get_post', 'create_comment', 'get_comment']},
             {'class': IsOwner, 'values': ['update_post', 'update_comment']},
-            {'class': IsOwnerOrIsModerator, 'values': ['delete_post', 'delete_comment']}
+            {'class': IsPostOwnerOrIsGroupOwner, 'values': ['delete_post']},
+            {'class': IsCommentOwnerOrIsGroupOwner, 'values': ['delete_comment']}
         ]
         self.permission_classes = set_basic_permissions(self.action, action_types)
         return [permission() for permission in self.permission_classes]

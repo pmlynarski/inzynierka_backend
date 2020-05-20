@@ -34,7 +34,7 @@ class IsOwnerOrIsMember(permissions.BasePermission):
     message = 'Musisz być właścicielem grupy lub jej członkiem by wykonać tą akcję'
 
     def has_object_permission(self, request, view, obj):
-        return request.user == obj.owner or request.user in obj.members
+        return request.user == obj.owner or request.user in obj.members.all()
 
 
 class IsAdmin(permissions.BasePermission):
@@ -49,6 +49,18 @@ class IsOwnerOrIsAdmin(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_admin or request.user == obj.owner
+
+
+class IsPostOwnerOrIsGroupOwner(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj.owner or request.user == obj.group.owner or request.user == obj.moderator
+
+
+class IsCommentOwnerOrIsGroupOwner(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj.owner or request.user == obj.post.group.owner or request.user == obj.group.moderator
 
 
 def set_basic_permissions(action, action_types):

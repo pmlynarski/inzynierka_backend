@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from groups.serializers import GroupSerializer
 from posts.models import Post, Comment
 from users.serializers import UserSerializer
 
@@ -26,10 +25,10 @@ class PostSerializer(serializers.ModelSerializer):
         return None
 
     def get_group(self, instance):
-        return GroupSerializer(instance.group, context=self.context).data
+        return {'id': instance.group.id, 'name': instance.group.name}
 
     def get_owner(self, instance):
-        return UserSerializer(instance.owner, context=self.context)
+        return UserSerializer(instance.owner, context=self.context).data
 
 
 class CommentSerializer(serializers.ModelSerializer):
