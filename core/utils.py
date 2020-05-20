@@ -31,7 +31,11 @@ class IAPITestCase(APITestCase):
 
         cls.test_post = Post.objects.create(owner=cls.test_user, content="Testing post", group=cls.test_group)
 
+        cls.test_post1 = Post.objects.create(owner=cls.test_user, content="Testing post", group=cls.test_group)
+
         cls.test_comment = Comment.objects.create(owner=cls.test_lecturer, post=cls.test_post)
+
+        cls.test_comment1 = Comment.objects.create(owner=cls.test_lecturer, post=cls.test_post)
 
         cls.user_to_pending = User.objects.create_user(email='mail@mail.mail', first_name='fsafsa',
                                                        last_name='sadsadsa', password='asdsadsa', is_active=True)

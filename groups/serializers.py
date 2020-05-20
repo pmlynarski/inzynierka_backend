@@ -17,11 +17,12 @@ class GroupSerializer(serializers.ModelSerializer):
         return UserSerializer(instance.owner, context=self.context).data
 
     def get_members(self, instance):
-        return UserSerializer(instance.members, context=self.context).data
+        return UserSerializer(instance.members, context=self.context, many=True).data
 
     def get_image(self, instance):
         if instance.image:
-            return 'http://' + self.context.get('host') + instance.image
+            print(instance.image)
+            return 'http://' + self.context.get('host') + str(instance.image)
         return None
 
 
@@ -33,4 +34,4 @@ class PendingMembersSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'group']
 
     def get_user(self, instance):
-        return UserSerializer(instance.owner, context=self.context).data
+        return UserSerializer(instance.user, context=self.context).data

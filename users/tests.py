@@ -31,7 +31,8 @@ class UserAppIntegrationTest(IAPITestCase):
                                                         'id': 7,
                                                         'is_admin': False,
                                                         'is_lecturer': False,
-                                                        'last_name': 'BarrFoo'})
+                                                        'last_name': 'BarrFoo',
+                                                        'image': None})
 
     def test_register_endpoint_invalid_data(self):
         data = {
@@ -48,7 +49,7 @@ class UserAppIntegrationTest(IAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content),
                          {'id': 1, 'email': 'foo@foo.foo', 'first_name': 'FooBar', 'last_name': 'BarrFoo',
-                          'is_admin': False, 'is_lecturer': False})
+                          'is_admin': False, 'is_lecturer': False, 'image': None})
 
     def test_update_profile_invalid_data(self):
         self.client.force_authenticate(user=self.test_user)
@@ -60,13 +61,13 @@ class UserAppIntegrationTest(IAPITestCase):
         response = self.client.put(reverse('user-update'), data={**self.basic_data, 'email': ''})
         self.assertEqual(response.status_code, 401)
 
-    def test_accept_user_valid(self):
+    def test_accept_user(self):
         self.client.force_authenticate(self.test_admin)
         response = self.client.post(reverse('user-accept_user', kwargs={'id': '2'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content), {'message': 'Pomyślnie aktywowano użytkownika'})
-
-    def test_accept_user_no_permission(self):
+        response = self.client.post(reverse('user-accept_user', kwargs={'id': 99}))
+        self.assertEqual(response.status_code, 404)
         self.client.force_authenticate(self.test_user)
         response = self.client.post(reverse('user-accept_user', kwargs={'id': '2'}))
         self.assertEqual(response.status_code, 403)
