@@ -81,11 +81,11 @@ class GroupViewSet(viewsets.GenericViewSet):
     def drop_member(self, request, **kwargs):
         try:
             group = Group.objects.get(**kwargs)
-            user = User.objects.get(id=request.data['id'])
+            user = User.objects.get(id=request.data.get('id'))
         except Group.DoesNotExist:
             return response404('Group')
-        except MultiValueDictKeyError:
-            return response406({'message': 'Złe dane wejściowe'})
+        except User.DoesNotExist:
+            return response404('Użytkownik nie znaleziony')
         self.check_object_permissions(request=request, obj=group)
         group.members.remove(user)
         group.save()

@@ -61,6 +61,8 @@ class GroupAppIntegrationTests(IAPITestCase):
         self.client.force_authenticate(self.test_user)
         response = self.client.get(reverse('group-get_group', kwargs={'pk': 1}))
         self.assertEqual(response.status_code, 200)
+        response = self.client.get(reverse('group-get_group', kwargs={'pk': 66}))
+        self.assertEqual(response.status_code, 404)
 
     def test_details_unauthorized(self):
         response = self.client.get(reverse('group-get_group', kwargs={'pk': 1}))
@@ -78,12 +80,16 @@ class GroupAppIntegrationTests(IAPITestCase):
         response = self.client.put(reverse('group-update_group', kwargs={'id': 1}), data={'name': 'Updated name'})
         self.assertEqual(json.loads(response.content)['message'], 'Pomyślnie zaktualizowano grupę')
         self.assertEqual(response.status_code, 200)
+        response = self.client.put(reverse('group-update_group', kwargs={'id': 99}), data={'name': 'Updated name'})
+        self.assertEqual(response.status_code, 404)
 
     def test_delete_group_owner(self):
         self.client.force_authenticate(self.test_lecturer)
         response = self.client.delete(reverse('group-delete_group', kwargs={'id': 1}))
         self.assertEqual(json.loads(response.content)['message'], 'Pomyślnie usunięto grupę')
         self.assertEqual(response.status_code, 200)
+        response = self.client.delete(reverse('group-delete_group', kwargs={'id': 19}))
+        self.assertEqual(response.status_code, 404)
 
     def test_delete_group_moderator(self):
         self.client.force_authenticate(self.test_moderator)
@@ -104,6 +110,8 @@ class GroupAppIntegrationTests(IAPITestCase):
         response = self.client.post(reverse('group-leave_group', kwargs={'id': 1}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content), {'message': 'Pomyślnie opuściłeś grupę'})
+        response = self.client.post(reverse('group-leave_group', kwargs={'id': 99}))
+        self.assertEqual(response.status_code, 404)
 
     def test_drop_user_from_group_owner(self):
         self.client.force_authenticate(self.test_lecturer)
@@ -111,6 +119,11 @@ class GroupAppIntegrationTests(IAPITestCase):
                                     data={'id': self.test_user.id})
         self.assertEqual(json.loads(response.content), {'message': 'Pomyślnie usunięto użytkownika z grupy'})
         self.assertEqual(response.status_code, 200)
+        response = self.client.post(reverse('group-drop_member', kwargs={'id': 99}),
+                                    data={'id': self.test_user.id})
+        self.assertEqual(response.status_code, 404)
+        response = self.client.post(reverse('group-drop_member', kwargs={'id': self.test_group.id}))
+        self.assertEqual(response.status_code, 404)
 
     def test_drop_user_from_group_casual(self):
         self.client.force_authenticate(self.test_user)
@@ -133,6 +146,8 @@ class GroupAppIntegrationTests(IAPITestCase):
         response = self.client.post(reverse('group-join_group', kwargs={'id': self.test_group.id}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content)['message'], 'Pomyślnie zapisano się na listę oczekujących')
+        response = self.client.post(reverse('group-join_group', kwargs={'id': 99}))
+        self.assertEqual(response.status_code, 404)
 
     def test_manage_pending_user_moderator_accept(self):
         self.client.force_authenticate(self.test_moderator)
@@ -153,6 +168,12 @@ class GroupAppIntegrationTests(IAPITestCase):
                                       data={'id': self.test_pending_user.id})
         self.assertEqual(json.loads(response.content), {'message': 'Pomyślnie odrzucono użytkownika'})
         self.assertEqual(response.status_code, 200)
+        response = self.client.delete(reverse('group-manage_pending_member', kwargs={'id': 99}),
+                                      data={'id': self.test_pending_user.id})
+        self.assertEqual(response.status_code, 404)
+        response = self.client.delete(reverse('group-manage_pending_member', kwargs={'id': self.test_group.id}),
+                                      data={'id': 99})
+        self.assertEqual(response.status_code, 404)
 
     def test_manage_pending_user_casual_decline(self):
         self.client.force_authenticate(self.test_user)

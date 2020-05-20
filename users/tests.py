@@ -61,13 +61,13 @@ class UserAppIntegrationTest(IAPITestCase):
         response = self.client.put(reverse('user-update'), data={**self.basic_data, 'email': ''})
         self.assertEqual(response.status_code, 401)
 
-    def test_accept_user_valid(self):
+    def test_accept_user(self):
         self.client.force_authenticate(self.test_admin)
         response = self.client.post(reverse('user-accept_user', kwargs={'id': '2'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content), {'message': 'Pomyślnie aktywowano użytkownika'})
-
-    def test_accept_user_no_permission(self):
+        response = self.client.post(reverse('user-accept_user', kwargs={'id': 99}))
+        self.assertEqual(response.status_code, 404)
         self.client.force_authenticate(self.test_user)
         response = self.client.post(reverse('user-accept_user', kwargs={'id': '2'}))
         self.assertEqual(response.status_code, 403)
