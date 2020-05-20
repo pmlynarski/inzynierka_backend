@@ -3,6 +3,7 @@ import json
 from django.urls import reverse
 
 from core.utils import IAPITestCase
+from groups.serializers import GroupSerializer, PendingMembersSerializer
 
 
 class GroupAppIntegrationTests(IAPITestCase):
@@ -180,3 +181,44 @@ class GroupAppIntegrationTests(IAPITestCase):
         response = self.client.delete(reverse('group-manage_pending_member', kwargs={'id': self.test_group.id}),
                                       data={'id': self.test_pending_user.id})
         self.assertEqual(response.status_code, 403)
+
+
+class GroupAppUnitTests(IAPITestCase):
+    counter = 1
+    context = {
+        'host': 'localhost:8000'
+    }
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        print('\n  -------------- Jednostkowe testy serializera grup -------------- \n ')
+
+    @classmethod
+    def setUpClassData(cls):
+        super().setUpTestData()
+
+    def test_unit_get_owner(self):
+        serializer = GroupSerializer(self.test_group)
+        self.assertEqual(serializer.get_owner(self.test_group),
+                         {'id': 3, 'email': 'foo@lecturer.bar', 'first_name': 'Lecturer', 'last_name': 'Tester',
+                          'is_admin': False, 'is_lecturer': True, 'image': None})
+
+    def test_unit_get_members(self):
+        serializer = GroupSerializer(self.test_group, context=self.context)
+        self.assertEqual(len(serializer.get_members(self.test_group)), 1)
+
+    def test_unit_get_image(self):
+        self.test_group.image = '/media/80667875_440098716867149_4273943207747780608_n.jpg'
+        serializer = GroupSerializer(self.test_group, context=self.context)
+        self.assertEqual(serializer.get_image(self.test_group),
+                         'http://localhost:8000/media/80667875_440098716867149_4273943207747780608_n.jpg')
+        self.test_group.image = None
+        serializer = GroupSerializer(self.test_group, context=self.context)
+        self.assertEqual(serializer.get_image(self.test_group), None)
+
+    def test_unit_get_pending_user(self):
+        serializer = PendingMembersSerializer(self.test_pending_user)
+        self.assertEqual(serializer.get_user(self.test_pending_user),
+                         {'id': 1, 'email': 'foo@foo.foo', 'first_name': 'Foo', 'last_name': 'Bar', 'is_admin': False,
+                          'is_lecturer': False, 'image': None})

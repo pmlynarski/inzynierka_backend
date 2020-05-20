@@ -16,12 +16,12 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_image(self, instance):
         if instance.image:
-            return 'http://' + self.context.get('host') + instance.image
+            return 'http://' + self.context.get('host') + str(instance.image)
         return None
 
     def get_file(self, instance):
         if instance.file:
-            return 'http://' + self.context.get('host') + instance.file
+            return 'http://' + self.context.get('host') + str(instance.file)
         return None
 
     def get_group(self, instance):
