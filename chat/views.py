@@ -10,7 +10,7 @@ from users.models import User
 class ChatViewSet(viewsets.GenericViewSet):
     queryset = Thread.objects.all()
 
-    @action(detail=False, methods=['GET', 'POST'], url_name='get_thread', url_path=r'(?P<id>\d+)')
+    @action(detail=False, methods=['GET', 'POST'], url_name='messages', url_path=r'(?P<id>\d+)')
     def messages(self, request, **kwargs):
         if request.method == 'GET':
             user_2 = User.objects.get(id=kwargs.get('id'))
@@ -26,7 +26,7 @@ class ChatViewSet(viewsets.GenericViewSet):
                 thread = Thread.objects.get_or_create(request.user, user2=user_2)
             except Thread.DoesNotExist:
                 return response406({'message': 'Nie możesz czatować sam ze sobą!'})
-            data = {**request.data, 'thread': thread.id, 'sender': request.user.id}
+            data = {'content': request.data.get('content'), 'thread': thread.id, 'sender': request.user.id}
             serializer = MessageSerializer(data=data)
             if not serializer.is_valid():
                 return response406({**serializer.errors, 'message': 'Błędne dane'})

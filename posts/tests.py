@@ -117,7 +117,7 @@ class PostSerializerUnitTest(IAPITestCase):
                           'is_lecturer': False, 'image': None})
 
     def test_unit_get_image(self):
-        self.test_post.image = '/media/80667875_440098716867149_4273943207747780608_n.jpg'
+        self.test_post.image = 'media/80667875_440098716867149_4273943207747780608_n.jpg'
         serializer = PostSerializer(self.test_post, context=self.context)
         self.assertEqual(serializer.get_image(self.test_post),
                          'http://localhost:8000/media/80667875_440098716867149_4273943207747780608_n.jpg')
@@ -125,7 +125,7 @@ class PostSerializerUnitTest(IAPITestCase):
         self.assertEqual(serializer.get_image(self.test_post), None)
 
     def test_unit_get_file(self):
-        self.test_post.file = '/media/80667875_440098716867149_4273943207747780608_n.jpg'
+        self.test_post.file = 'media/80667875_440098716867149_4273943207747780608_n.jpg'
         serializer = PostSerializer(self.test_post, context=self.context)
         self.assertEqual(serializer.get_file(self.test_post),
                          'http://localhost:8000/media/80667875_440098716867149_4273943207747780608_n.jpg')

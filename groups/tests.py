@@ -209,7 +209,7 @@ class GroupAppUnitTests(IAPITestCase):
         self.assertEqual(len(serializer.get_members(self.test_group)), 1)
 
     def test_unit_get_image(self):
-        self.test_group.image = '/media/80667875_440098716867149_4273943207747780608_n.jpg'
+        self.test_group.image = 'media/80667875_440098716867149_4273943207747780608_n.jpg'
         serializer = GroupSerializer(self.test_group, context=self.context)
         self.assertEqual(serializer.get_image(self.test_group),
                          'http://localhost:8000/media/80667875_440098716867149_4273943207747780608_n.jpg')
