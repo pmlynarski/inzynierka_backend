@@ -2,7 +2,7 @@ import json
 
 from django.urls import reverse
 
-from core.utils import IAPITestCase
+from core.tests_utils import IAPITestCase
 
 
 class UserAppIntegrationTest(IAPITestCase):

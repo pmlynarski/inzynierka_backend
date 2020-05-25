@@ -22,7 +22,7 @@ class GroupSerializer(serializers.ModelSerializer):
     def get_image(self, instance):
         if instance.image:
             print(instance.image)
-            return 'http://' + self.context.get('host') + str(instance.image)
+            return 'http://' + self.context.get('host') + '/' + str(instance.image)
         return None
 
 
