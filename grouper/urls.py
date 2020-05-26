@@ -17,7 +17,6 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
-from rest_framework.authtoken import views
 
 from chat import views as chat_views
 from groups import views as groups_views
@@ -33,5 +32,5 @@ router.register(r'chat', chat_views.ChatViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('admin/', admin.site.urls),
-    url(r'^login/', views.obtain_auth_token)
+    url(r'^login/', users_views.CustomAuthToken.as_view())
 ]
