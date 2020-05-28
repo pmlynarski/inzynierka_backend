@@ -21,15 +21,16 @@ class PostsViewSet(viewsets.GenericViewSet):
             return response404('Group')
         self.check_object_permissions(group, request)
         posts = Post.objects.filter(group=group)
-        serializer = PostSerializer(posts, many=True, context={'host': request.get_host})
+        serializer = PostSerializer(posts, many=True, context={'host': request.get_host()})
         paginator = PageNumberPagination()
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
 
     @action(methods=['GET'], detail=False, url_name="user_post_list", url_path='')
     def user_posts_list(self, request, **kwargs):
-        posts = Post.objects.filter(group__members=request.user) | Post.objects.filter(group__owner=request.user)
-        serializer = PostSerializer(posts, many=True, context={'host': request.get_host})
+        posts = Post.objects.none().union(Post.objects.filter(group__members=request.user)).union(
+            Post.objects.filter(group__owner=request.user))
+        serializer = PostSerializer(posts, many=True, context={'host': request.get_host()})
         paginator = PageNumberPagination()
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
@@ -41,7 +42,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         except Group.DoesNotExist:
             return response404('Group')
         self.check_object_permissions(request=request, obj=group)
-        serializer = PostSerializer(data=request.data, partial=True, context={'host': request.get_host})
+        serializer = PostSerializer(data=request.data, partial=True, context={'host': request.get_host()})
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.save(group=group, owner=request.user)
@@ -54,7 +55,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         except Post.DoesNotExist:
             return response404('Post')
         self.check_object_permissions(request=request, obj=post.group)
-        return response200(PostSerializer(post, context={'host': request.get_host}).data)
+        return response200(PostSerializer(post, context={'host': request.get_host()}).data)
 
     @action(methods=['PUT'], detail=False, url_name='post_update', url_path=r'update/(?P<id>\d+)')
     def update_post(self, request, **kwargs):
@@ -63,7 +64,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         except Post.DoesNotExist:
             return response404('Post')
         self.check_object_permissions(request=request, obj=post)
-        serializer = PostSerializer(post, data=request.data, partial=True, context={'host': request.get_host})
+        serializer = PostSerializer(post, data=request.data, partial=True, context={'host': request.get_host()})
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.save()
@@ -85,7 +86,7 @@ class PostsViewSet(viewsets.GenericViewSet):
             post = Post.objects.get(**kwargs)
         except Post.DoesNotExist:
             return response404('Post')
-        serializer = CommentSerializer(data=request.data, partial=True, context={'host': request.get_host})
+        serializer = CommentSerializer(data=request.data, partial=True, context={'host': request.get_host()})
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.save(post=post, owner=request.user)
@@ -97,7 +98,7 @@ class PostsViewSet(viewsets.GenericViewSet):
             comment = Comment.objects.get(**kwargs)
         except Comment.DoesNotExist:
             return response404('Comment')
-        serializer = CommentSerializer(comment, data=request.data, partial=True, context={'host': request.get_host})
+        serializer = CommentSerializer(comment, data=request.data, partial=True, context={'host': request.get_host()})
         self.check_object_permissions(request=request, obj=comment)
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
@@ -120,7 +121,7 @@ class PostsViewSet(viewsets.GenericViewSet):
              'values': ['groups_posts_list', 'create_post', 'get_post', 'create_comment', 'get_comment']},
             {'class': IsOwner, 'values': ['update_post', 'update_comment']},
             {'class': IsPostOwnerOrIsGroupOwner, 'values': ['delete_post']},
-            {'class': IsCommentOwnerOrIsGroupOwner, 'values': ['delete_comment']}
+            {'class': IsCommentOwnerOrIsGroupOwner, 'values': ['delete_comment']},
         ]
         self.permission_classes = set_basic_permissions(self.action, action_types)
         return [permission() for permission in self.permission_classes]

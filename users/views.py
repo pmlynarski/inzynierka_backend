@@ -24,7 +24,7 @@ class UsersViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=['post'], url_name='register', url_path='register')
     def register(self, request):
-        serializer = UserSerializer(data=request.data, context={'host': request.get_host})
+        serializer = UserSerializer(data=request.data, context={'host': request.get_host()})
         if not serializer.is_valid():
             return response406(serializer.errors)
         serializer.save()
@@ -33,7 +33,7 @@ class UsersViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=['put'], url_name='update', url_path='update')
     def update_profile(self, request):
         serializer = UserSerializer(data=request.data, instance=request.user, partial=True,
-                                    context={'host': request.get_host})
+                                    context={'host': request.get_host()})
         if not serializer.is_valid():
             return response406(serializer.errors)
         serializer.save()
@@ -46,7 +46,7 @@ class UsersViewSet(viewsets.GenericViewSet):
         except User.DoesNotExist:
             return response404('User')
         serializer = UserSerializer(instance=instance, data={'active': True}, partial=True,
-                                    context={'host': request.get_host})
+                                    context={'host': request.get_host()})
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Złe dane wejściowe'})
         serializer.save()
@@ -57,8 +57,12 @@ class UsersViewSet(viewsets.GenericViewSet):
         users = User.objects.filter(active=False)
         if len(users) == 0:
             return response404('Users')
-        serializer = UserSerializer(users, many=True, context={'host': request.get_host})
+        serializer = UserSerializer(users, many=True, context={'host': request.get_host()})
         return response200(serializer.data)
+
+    @action(detail=False, methods=['GET'], url_name='current_user', url_path='current_user')
+    def get_current_user(self, request):
+        return response200(UserSerializer(request.user, context={'host': request.get_host()}).data)
 
 
 class CustomAuthToken(ObtainAuthToken):

@@ -5,7 +5,6 @@ from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
 from grouper import settings
-from grouper.settings import MEDIA_ROOT
 
 
 class UserManager(BaseUserManager):
@@ -25,7 +24,8 @@ class UserManager(BaseUserManager):
         user_obj.admin = is_admin
         user_obj.active = is_active
         user_obj.lecturer = is_lecturer
-        user_obj.image = image
+        if image is not None:
+            user_obj.image = image
         user_obj.save()
         return user_obj
 
@@ -41,6 +41,10 @@ class UserManager(BaseUserManager):
         return user_obj
 
 
+def upload_location(instance, filename):
+    return "user%s/%s" % (instance.id, filename)
+
+
 class User(AbstractBaseUser):
     email = models.EmailField(max_length=255, unique=True)
     first_name = models.CharField(max_length=255)
@@ -49,7 +53,7 @@ class User(AbstractBaseUser):
     admin = models.BooleanField(default=False)
     lecturer = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to=MEDIA_ROOT, null=True, default=None)
+    image = models.ImageField(upload_to=upload_location, null=False, default='default-profile.gif')
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
