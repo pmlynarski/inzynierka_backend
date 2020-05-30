@@ -64,10 +64,18 @@ class PostsViewSet(viewsets.GenericViewSet):
         except Post.DoesNotExist:
             return response404('Post')
         self.check_object_permissions(request=request, obj=post)
+        file = request.FILES.get('file', None)
+        image = request.FILES.get('image', None)
+        if file:
+            post.file = file
+            post.save()
+        if image:
+            post.image = image
+            post.save()
         serializer = PostSerializer(post, data=request.data, partial=True, context={'host': request.get_host()})
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
-        serializer.save()
+        serializer.update(post, serializer.validated_data)
         return response200({**serializer.data, 'message': 'Pomyślnie zaktualizowano posta'})
 
     @action(methods=['DELETE'], detail=False, url_name='post_delete', url_path=r'delete/(?P<id>\d+)')

@@ -12,16 +12,16 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'content', 'owner', 'group', 'image', 'file']
+        fields = ['id', 'content', 'owner', 'group', 'image', 'file', 'date_posted']
 
     def get_image(self, instance):
         if instance.image:
-            return 'http://' + self.context.get('host') + '/' + str(instance.image)
+            return 'http://' + self.context.get('host') + '/media/' + str(instance.image)
         return None
 
     def get_file(self, instance):
         if instance.file:
-            return 'http://' + self.context.get('host') + '/' + str(instance.file)
+            return 'http://' + self.context.get('host') + '/media/' + str(instance.file)
         return None
 
     def get_group(self, instance):
@@ -36,7 +36,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'content', 'post', 'owner']
+        fields = ['id', 'content', 'post', 'owner', 'date_commented']
 
     def get_owner(self, instance):
         return UserSerializer(instance.owner, context=self.context).data

@@ -1,8 +1,11 @@
 from django.db import models
 
-from grouper.settings import MEDIA_ROOT
 from groups.models import Group
 from users.models import User
+
+
+def upload_location(instance, filename):
+    return "post%s/%s" % (instance.id, filename)
 
 
 class Post(models.Model):
@@ -10,8 +13,8 @@ class Post(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     date_posted = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to=MEDIA_ROOT, default=None, null=True)
-    file = models.FileField(upload_to=MEDIA_ROOT, default=None, null=True)
+    image = models.ImageField(upload_to=upload_location, default=None, null=True)
+    file = models.FileField(upload_to=upload_location, default=None, null=True)
 
 
 class Comment(models.Model):

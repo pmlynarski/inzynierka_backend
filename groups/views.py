@@ -56,7 +56,6 @@ class GroupViewSet(viewsets.GenericViewSet):
             members = members.union(group.members.exclude(id=request.user.id))
             if not group.owner.id == request.user.id:
                 members = members.union(User.objects.filter(id=group.owner.id))
-        print(members)
         paginator = PageNumberPagination()
         paginator.page_size = 20
         final = UserSerializer(members, many=True, context={'host': request.get_host()}).data
