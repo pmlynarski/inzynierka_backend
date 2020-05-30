@@ -13,8 +13,8 @@ class Post(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     date_posted = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to=upload_location, default=None, null=True)
-    file = models.FileField(upload_to=upload_location, default=None, null=True)
+    image = models.ImageField(upload_to=upload_location, default=None, null=True, blank=True)
+    file = models.FileField(upload_to=upload_location, default=None, null=True, blank=True)
 
 
 class Comment(models.Model):

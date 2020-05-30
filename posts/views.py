@@ -32,6 +32,7 @@ class PostsViewSet(viewsets.GenericViewSet):
             Post.objects.filter(group__owner=request.user))
         serializer = PostSerializer(posts, many=True, context={'host': request.get_host()})
         paginator = PageNumberPagination()
+        paginator.page_size = 5
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
 
