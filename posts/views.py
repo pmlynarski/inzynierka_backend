@@ -49,14 +49,26 @@ class PostsViewSet(viewsets.GenericViewSet):
         serializer.save(group=group, owner=request.user)
         return response200({**serializer.data, 'message': 'Pomyślnie utworzono post'})
 
-    @action(methods=['GET'], detail=True, url_name='post_details')
+    @action(methods=['GET'], detail=False, url_name='post_details', url_path=r'post/(?P<id>\d+)')
     def get_post(self, request, **kwargs):
         try:
-            post = Post.objects.get(id=kwargs.get('pk'))
+            post = Post.objects.get(id=kwargs.get('id'))
         except Post.DoesNotExist:
             return response404('Post')
         self.check_object_permissions(request=request, obj=post.group)
         return response200(PostSerializer(post, context={'host': request.get_host()}).data)
+
+    @action(methods=['GET'], detail=False, url_name='post_comments', url_path=r'comments/(?P<id>\d+)')
+    def get_comments(self, request, **kwargs):
+        try:
+            comments = Comment.objects.filter(post_id=kwargs.get('id'))
+        except Comment.DoesNotExist:
+            return response200({[]})
+        serializer = CommentSerializer(comments, many=True, context={'host': request.get_host()})
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        data = paginator.paginate_queryset(serializer.data, request)
+        return paginator.get_paginated_response(data=data)
 
     @action(methods=['PUT'], detail=False, url_name='post_update', url_path=r'update/(?P<id>\d+)')
     def update_post(self, request, **kwargs):
