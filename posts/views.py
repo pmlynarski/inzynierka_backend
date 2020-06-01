@@ -29,7 +29,7 @@ class PostsViewSet(viewsets.GenericViewSet):
     @action(methods=['GET'], detail=False, url_name="user_post_list", url_path='')
     def user_posts_list(self, request, **kwargs):
         posts = Post.objects.none().union(Post.objects.filter(group__members=request.user)).union(
-            Post.objects.filter(group__owner=request.user))
+            Post.objects.filter(group__owner=request.user)).order_by('date_posted').reverse()
         serializer = PostSerializer(posts, many=True, context={'host': request.get_host()})
         paginator = PageNumberPagination()
         paginator.page_size = 5
@@ -62,7 +62,7 @@ class PostsViewSet(viewsets.GenericViewSet):
     def get_comments(self, request, **kwargs):
         paginator = PageNumberPagination()
         try:
-            comments = Comment.objects.filter(post_id=kwargs.get('id'))
+            comments = Comment.objects.filter(post_id=kwargs.get('id')).order_by('date_commented').reverse()
         except Comment.DoesNotExist:
             return paginator.get_paginated_response(data=[])
         serializer = CommentSerializer(comments, many=True, context={'host': request.get_host()})
