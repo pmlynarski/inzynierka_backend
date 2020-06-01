@@ -60,12 +60,12 @@ class PostsViewSet(viewsets.GenericViewSet):
 
     @action(methods=['GET'], detail=False, url_name='post_comments', url_path=r'comments/(?P<id>\d+)')
     def get_comments(self, request, **kwargs):
+        paginator = PageNumberPagination()
         try:
             comments = Comment.objects.filter(post_id=kwargs.get('id'))
         except Comment.DoesNotExist:
-            return response200({[]})
+            return paginator.get_paginated_response(data=[])
         serializer = CommentSerializer(comments, many=True, context={'host': request.get_host()})
-        paginator = PageNumberPagination()
         paginator.page_size = 10
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
@@ -101,7 +101,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         post.delete()
         return response200({'message': 'Pomyślnie usunięto posta'})
 
-    @action(methods=['POST'], detail=False, url_name='create_comment', url_path=r'create/(?P<id>\d+)/comment')
+    @action(methods=['POST'], detail=False, url_name='create_comment', url_path=r'create/comment/(?P<id>\d+)')
     def create_comment(self, request, **kwargs):
         try:
             post = Post.objects.get(**kwargs)
@@ -113,7 +113,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         serializer.save(post=post, owner=request.user)
         return response200({**serializer.data, 'message': 'Pomyślnie utworzono komentarz'})
 
-    @action(methods=['PUT'], detail=False, url_name='comment_update', url_path=r'update/(?P<id>\d+)/comment')
+    @action(methods=['PUT'], detail=False, url_name='comment_update', url_path=r'update/comment/(?P<id>\d+)')
     def update_comment(self, request, **kwargs):
         try:
             comment = Comment.objects.get(**kwargs)
