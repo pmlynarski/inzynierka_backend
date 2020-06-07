@@ -2,65 +2,80 @@ from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated
 
 
-class IsLecturerOrIsAdmin(permissions.BasePermission):
-    message = 'Musisz być wykładowcą lub administratorem by wykonać tą akcję'
-
-    def has_permission(self, request, view):
-        return request.user.is_admin or request.user.is_lecturer
-
-
-class IsOwnerOrIsModerator(permissions.BasePermission):
-    message = 'Musisz być właścicielem lub moderatorem grupy by wykonać tą akcję'
-
-    def has_object_permission(self, request, view, obj):
-        return request.user == obj.moderator or request.user == obj.owner
-
-
-class IsOwner(permissions.BasePermission):
-    message = 'Musisz być właścicielem by wykonać tą akcję'
-
-    def has_object_permission(self, request, view, obj):
-        return request.user == obj.owner
-
-
-class IsMember(permissions.BasePermission):
-    message = 'Musisz być członkiem grupy by wykonać tą akcję'
-
-    def has_object_permission(self, request, view, obj):
-        return request.user in obj.members.all()
-
-
-class IsOwnerOrIsMember(permissions.BasePermission):
-    message = 'Musisz być właścicielem grupy lub jej członkiem by wykonać tą akcję'
-
-    def has_object_permission(self, request, view, obj):
-        return request.user == obj.owner or request.user in obj.members.all()
-
-
 class IsAdmin(permissions.BasePermission):
-    message = 'Musisz być administratorem by wykonać tą akcję'
+    message = 'Musisz być administratorem'
 
     def has_permission(self, request, view):
         return request.user.is_admin
 
 
-class IsOwnerOrIsAdmin(permissions.BasePermission):
-    message = 'Musisz być administratorem lub właścicielem by wykonać tą akcję'
+# Groups
+
+class IsAdminOrIsLecturer(permissions.BasePermission):
+    message = 'Musisz być administratorem lub wykładowcą dla tej akcji'
+
+    def has_permission(self, request, view):
+        return request.user.is_admin or request.user.is_lecturer
+
+
+class IsAdminOrIsGroupOwnerOrIsGroupMember(permissions.BasePermission):
+    message = 'Musisz być członkiem grupy lub administratorem dla tej akcji'
+
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_admin or request.user == obj.owner or request.user in obj.members.all()
+
+
+class IsAdminOrIsGroupOwner(permissions.BasePermission):
+    message = 'Musisz być administratorem lub właścicielem grupy'
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_admin or request.user == obj.owner
 
 
-class IsPostOwnerOrIsGroupOwner(permissions.BasePermission):
+class IsGroupOwner(permissions.BasePermission):
+    message = 'Musisz być właścicielem grupy'
 
     def has_object_permission(self, request, view, obj):
-        return request.user == obj.owner or request.user == obj.group.owner or request.user == obj.moderator
+        return request.user == obj.owner
 
 
-class IsCommentOwnerOrIsGroupOwner(permissions.BasePermission):
+class IsGroupMember(permissions.BasePermission):
+    message = 'Musisz być członkiem grupy'
 
     def has_object_permission(self, request, view, obj):
-        return request.user == obj.owner or request.user == obj.post.group.owner or request.user == obj.group.moderator
+        return request.user in obj.members.all()
+
+
+class IsAdminOrIsGroupOwnerOrIsGroupModerator(permissions.BasePermission):
+    message = 'Musisz być administratorem, właścicielem grupy, lub jej moderatorem'
+
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_admin or request.user == obj.owner or request.user == obj.moderator
+
+
+# Posts
+
+class IsAdminOrIsPostOwnerOrIsGroupOwnerOrIsGroupModerator(permissions.BasePermission):
+    message = 'Nie masz ku temu uprawnień'
+
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_admin or obj.owner == request.user or \
+               obj.group.owner == request.user or obj.group.moderator == request.user
+
+
+class IsAdminOrIsCommentOwnerOrIsPostOwnerOrIsGroupOwnerOrIsGroupModerator(permissions.BasePermission):
+    message = 'Nie masz ku temu uprawnień'
+
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_admin or obj.owner == request.user or obj.post.owner == request.user or \
+               obj.post.group.owner == request.user or obj.post.group.moderator == request.user
+
+
+class IsPostOwner(permissions.BasePermission):
+    message = 'Musisz być właścicielem posta'
+
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj.owner
 
 
 def set_basic_permissions(action, action_types):

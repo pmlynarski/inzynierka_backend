@@ -8,10 +8,12 @@ class GroupSerializer(serializers.ModelSerializer):
     owner = serializers.SerializerMethodField('get_owner')
     members = serializers.SerializerMethodField('get_members')
     image = serializers.SerializerMethodField('get_image')
+    members_count = serializers.SerializerMethodField('get_count')
+    moderator = UserSerializer(read_only=True, many=False)
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'owner', 'members', 'image']
+        fields = ['id', 'name', 'owner', 'members', 'members_count', 'image', 'moderator']
 
     def get_owner(self, instance):
         return UserSerializer(instance.owner, context=self.context).data
@@ -23,6 +25,9 @@ class GroupSerializer(serializers.ModelSerializer):
         if instance.image:
             return 'http://' + self.context.get('host') + '/media/' + str(instance.image)
         return None
+
+    def get_count(self, instance):
+        return instance.members.count() + 1
 
 
 class PendingMembersSerializer(serializers.ModelSerializer):

@@ -2,8 +2,9 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 
-from core.permissions import IsOwnerOrIsMember, IsOwner, set_basic_permissions, \
-    IsPostOwnerOrIsGroupOwner, IsCommentOwnerOrIsGroupOwner
+from core.permissions import set_basic_permissions, IsAdminOrIsPostOwnerOrIsGroupOwnerOrIsGroupModerator, \
+    IsAdminOrIsCommentOwnerOrIsPostOwnerOrIsGroupOwnerOrIsGroupModerator, IsPostOwner, \
+    IsAdminOrIsGroupOwnerOrIsGroupMember
 from core.responses import response406, response200, response404
 from groups.models import Group
 from posts.models import Post, Comment
@@ -19,8 +20,8 @@ class PostsViewSet(viewsets.GenericViewSet):
             group = Group.objects.get(**kwargs)
         except Group.DoesNotExist:
             return response404('Group')
-        self.check_object_permissions(group, request)
-        posts = Post.objects.filter(group=group)
+        self.check_object_permissions(obj=group, request=request)
+        posts = Post.objects.filter(group=group).order_by('date_posted').reverse()
         serializer = PostSerializer(posts, many=True, context={'host': request.get_host()})
         paginator = PageNumberPagination()
         data = paginator.paginate_queryset(serializer.data, request)
@@ -46,7 +47,15 @@ class PostsViewSet(viewsets.GenericViewSet):
         serializer = PostSerializer(data=request.data, partial=True, context={'host': request.get_host()})
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
-        serializer.save(group=group, owner=request.user)
+        post = serializer.save(group=group, owner=request.user)
+        file = request.FILES.get('file', None)
+        image = request.FILES.get('image', None)
+        if file:
+            post.file = file
+            post.save()
+        if image:
+            post.image = image
+            post.save()
         return response200({**serializer.data, 'message': 'Pomyślnie utworzono post'})
 
     @action(methods=['GET'], detail=False, url_name='post_details', url_path=r'post/(?P<id>\d+)')
@@ -62,9 +71,11 @@ class PostsViewSet(viewsets.GenericViewSet):
     def get_comments(self, request, **kwargs):
         paginator = PageNumberPagination()
         try:
-            comments = Comment.objects.filter(post_id=kwargs.get('id')).order_by('date_commented').reverse()
-        except Comment.DoesNotExist:
+            post = Post.objects.filter(id=kwargs.get('id'))
+        except Post.DoesNotExist:
             return paginator.get_paginated_response(data=[])
+        comments = Comment.objects.filter(post=post).order_by('date_commented').reverse()
+        self.check_object_permissions(request=request, obj=post.group)
         serializer = CommentSerializer(comments, many=True, context={'host': request.get_host()})
         paginator.page_size = 10
         data = paginator.paginate_queryset(serializer.data, request)
@@ -107,6 +118,7 @@ class PostsViewSet(viewsets.GenericViewSet):
             post = Post.objects.get(**kwargs)
         except Post.DoesNotExist:
             return response404('Post')
+        self.check_object_permissions(request=request, obj=post.group)
         serializer = CommentSerializer(data=request.data, partial=True, context={'host': request.get_host()})
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
@@ -138,11 +150,22 @@ class PostsViewSet(viewsets.GenericViewSet):
 
     def get_permissions(self):
         action_types = [
-            {'class': IsOwnerOrIsMember,
-             'values': ['groups_posts_list', 'create_post', 'get_post', 'create_comment', 'get_comment']},
-            {'class': IsOwner, 'values': ['update_post', 'update_comment']},
-            {'class': IsPostOwnerOrIsGroupOwner, 'values': ['delete_post']},
-            {'class': IsCommentOwnerOrIsGroupOwner, 'values': ['delete_comment']},
+            {
+                'class': IsAdminOrIsPostOwnerOrIsGroupOwnerOrIsGroupModerator,
+                'values': ['delete_post']
+            },
+            {
+                'class': IsAdminOrIsCommentOwnerOrIsPostOwnerOrIsGroupOwnerOrIsGroupModerator,
+                'values': ['delete_comment']
+            },
+            {
+                'class': IsPostOwner,
+                'values': ['update_post', 'update_comment']
+            },
+            {
+                'class': IsAdminOrIsGroupOwnerOrIsGroupMember,
+                'values': ['group_posts_list', 'create_post', 'get_post', 'get_comments', 'create_comment']
+            },
         ]
         self.permission_classes = set_basic_permissions(self.action, action_types)
         return [permission() for permission in self.permission_classes]

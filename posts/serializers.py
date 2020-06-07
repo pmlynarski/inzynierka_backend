@@ -25,7 +25,8 @@ class PostSerializer(serializers.ModelSerializer):
         return None
 
     def get_group(self, instance):
-        return {'id': instance.group.id, 'name': instance.group.name}
+        return {'id': instance.group.id, 'name': instance.group.name, 'owner': instance.group.owner.id,
+                'moderator': instance.group.moderator.id}
 
     def get_owner(self, instance):
         return UserSerializer(instance.owner, context=self.context).data

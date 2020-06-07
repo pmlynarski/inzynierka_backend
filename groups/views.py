@@ -3,8 +3,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 
-from core.permissions import IsLecturerOrIsAdmin, IsOwnerOrIsModerator, IsMember, set_basic_permissions, \
-    IsOwnerOrIsAdmin
+from core.permissions import IsAdminOrIsLecturer, IsAdminOrIsGroupOwnerOrIsGroupMember, IsGroupOwner, IsGroupMember, \
+    set_basic_permissions, IsAdminOrIsGroupOwnerOrIsGroupModerator, IsAdminOrIsGroupOwner
 from core.responses import response200, response406, response404
 from groups.models import Group, PendingMember
 from groups.serializers import GroupSerializer, PendingMembersSerializer
@@ -45,6 +45,19 @@ class GroupViewSet(viewsets.GenericViewSet):
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
 
+    @action(methods=['GET'], detail=False, url_name='list', url_path=r'members/(?P<id>\d+)')
+    def members_list(self, request, **kwargs):
+        try:
+            group = Group.objects.get(id=kwargs.get('id'))
+        except Group.DoesNotExist:
+            return response404('Grupa')
+        self.check_object_permissions(request=request, obj=group)
+        members = group.members.all().union(User.objects.filter(id=group.owner.id))
+        serializer = UserSerializer(members, many=True, context={'host': request.get_host()})
+        paginator = PageNumberPagination()
+        data = paginator.paginate_queryset(serializer.data, request)
+        return paginator.get_paginated_response(data=data)
+
     @action(methods=['GET'], detail=False, url_name='friends_list', url_path='friends_list')
     def friends_list(self, request):
         groups = Group.objects.none()
@@ -62,12 +75,13 @@ class GroupViewSet(viewsets.GenericViewSet):
         data = paginator.paginate_queryset(final, request)
         return paginator.get_paginated_response(data=data)
 
-    @action(methods=['GET'], detail=True, url_name='get_group')
+    @action(methods=['GET'], detail=False, url_name='get_group', url_path=r'(?P<id>\d+)')
     def details(self, request, **kwargs):
         try:
-            group = Group.objects.get(id=kwargs.get('pk'))
+            group = Group.objects.get(id=kwargs.get('id'))
         except Group.DoesNotExist:
             return response404('Group')
+        self.check_object_permissions(request=request, obj=group)
         return response200(
             {**GroupSerializer(group, context={'host': request.get_host()}).data, 'message': 'Pomyślnie dodano grupę'})
 
@@ -153,20 +167,28 @@ class GroupViewSet(viewsets.GenericViewSet):
     def get_permissions(self):
         action_types = [
             {
-                'class': IsOwnerOrIsModerator,
-                'values': ['update_group', 'drop_member', 'manage_pending_member']
-            },
-            {
-                'class': IsOwnerOrIsAdmin,
-                'values': ['delete_group']
-            },
-            {
-                'class': IsLecturerOrIsAdmin,
+                'class': IsAdminOrIsLecturer,
                 'values': ['create_group']
             },
             {
-                'class': IsMember,
+                'class': IsAdminOrIsGroupOwnerOrIsGroupMember,
+                'values': ['members_list', 'details']
+            },
+            {
+                'class': IsGroupOwner,
+                'values': ['update_group']
+            },
+            {
+                'class': IsGroupMember,
                 'values': ['leave_group']
+            },
+            {
+                'class': IsAdminOrIsGroupOwnerOrIsGroupModerator,
+                'values': ['drop_member', 'manage_pending_member']
+            },
+            {
+                'class': IsAdminOrIsGroupOwner,
+                'values': ['delete_group']
             }
         ]
         self.permission_classes = set_basic_permissions(self.action, action_types)
