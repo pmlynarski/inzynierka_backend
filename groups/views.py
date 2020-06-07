@@ -93,6 +93,10 @@ class GroupViewSet(viewsets.GenericViewSet):
             return response404('Group')
         self.check_object_permissions(request=request, obj=group)
         serializer = GroupSerializer(group, data=request.data, partial=True, context={'host': request.get_host()})
+        if 'moderator' in request.data.keys():
+            user = User.objects.get(id=request.data.get('moderator'))
+            group.moderator = user
+            group.save()
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.save()
@@ -150,11 +154,11 @@ class GroupViewSet(viewsets.GenericViewSet):
     def manage_pending_member(self, request, **kwargs):
         try:
             group = Group.objects.get(**kwargs)
-            pending = PendingMember.objects.get(id=request.data['id'], group=group)
+            pending = PendingMember.objects.get(user_id=request.data.get('userId'), group_id=group.id)
         except Group.DoesNotExist:
             return response404('Group')
         except PendingMember.DoesNotExist:
-            return response404('Użytkownik nie znaleziony')
+            return response404('Użytkownik')
         self.check_object_permissions(request=request, obj=group)
         if request.method == 'POST':
             group.members.add(pending.user)
@@ -163,6 +167,19 @@ class GroupViewSet(viewsets.GenericViewSet):
             message = 'Pomyślnie odrzucono użytkownika'
         pending.delete()
         return response200({'message': message})
+
+    @action(methods=['GET'], detail=False, url_name='pending_list', url_path=r'pending_list/(?P<id>\d+)')
+    def pending_list(self, request, **kwargs):
+        try:
+            group = Group.objects.get(id=kwargs.get('id'))
+        except Group.DoesNotExist:
+            return response404('Grupa')
+        pendings = PendingMember.objects.filter(group=group)
+        users = [pending.user for pending in pendings]
+        serializer = UserSerializer(users, many=True, context={'host': request.get_host()})
+        paginator = PageNumberPagination()
+        final = paginator.paginate_queryset(serializer.data, request)
+        return paginator.get_paginated_response(final)
 
     def get_permissions(self):
         action_types = [

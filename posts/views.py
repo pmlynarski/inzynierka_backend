@@ -71,7 +71,7 @@ class PostsViewSet(viewsets.GenericViewSet):
     def get_comments(self, request, **kwargs):
         paginator = PageNumberPagination()
         try:
-            post = Post.objects.filter(id=kwargs.get('id'))
+            post = Post.objects.get(id=kwargs.get('id'))
         except Post.DoesNotExist:
             return paginator.get_paginated_response(data=[])
         comments = Comment.objects.filter(post=post).order_by('date_commented').reverse()

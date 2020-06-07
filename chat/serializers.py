@@ -5,15 +5,9 @@ from users.serializers import UserSerializer
 
 
 class ThreadSerializer(serializers.ModelSerializer):
-    user1 = serializers.SerializerMethodField('get_user1')
-    user2 = serializers.SerializerMethodField('get_user2')
+    user1 = UserSerializer(many=False, read_only=True)
+    user2 = UserSerializer(many=False, read_only=True)
     messages = serializers.SerializerMethodField('get_messages', read_only=True)
-
-    def get_user1(self, instance):
-        return UserSerializer(instance.user1, context=self.context).data
-
-    def get_user2(self, instance):
-        return UserSerializer(instance.user2, context=self.context).data
 
     def get_messages(self, instance):
         messages = Message.objects.filter(thread=instance).order_by('date_send')

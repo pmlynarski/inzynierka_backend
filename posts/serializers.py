@@ -5,7 +5,7 @@ from users.serializers import UserSerializer
 
 
 class PostSerializer(serializers.ModelSerializer):
-    owner = serializers.SerializerMethodField('get_owner')
+    owner = UserSerializer(read_only=True, many=False)
     group = serializers.SerializerMethodField('get_group')
     image = serializers.SerializerMethodField('get_image')
     file = serializers.SerializerMethodField('get_file')
@@ -28,16 +28,10 @@ class PostSerializer(serializers.ModelSerializer):
         return {'id': instance.group.id, 'name': instance.group.name, 'owner': instance.group.owner.id,
                 'moderator': instance.group.moderator.id}
 
-    def get_owner(self, instance):
-        return UserSerializer(instance.owner, context=self.context).data
-
 
 class CommentSerializer(serializers.ModelSerializer):
-    owner = serializers.SerializerMethodField('get_owner')
+    owner = UserSerializer(many=False, read_only=True)
 
     class Meta:
         model = Comment
         fields = ['id', 'content', 'post', 'owner', 'date_commented']
-
-    def get_owner(self, instance):
-        return UserSerializer(instance.owner, context=self.context).data

@@ -5,21 +5,16 @@ from users.serializers import UserSerializer
 
 
 class GroupSerializer(serializers.ModelSerializer):
-    owner = serializers.SerializerMethodField('get_owner')
-    members = serializers.SerializerMethodField('get_members')
+    owner = UserSerializer(many=False, read_only=True)
+    members = UserSerializer(many=True, read_only=True)
+    moderator = UserSerializer(read_only=True, many=False)
     image = serializers.SerializerMethodField('get_image')
     members_count = serializers.SerializerMethodField('get_count')
-    moderator = UserSerializer(read_only=True, many=False)
+    pending_count = serializers.SerializerMethodField('get_pending_count')
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'owner', 'members', 'members_count', 'image', 'moderator']
-
-    def get_owner(self, instance):
-        return UserSerializer(instance.owner, context=self.context).data
-
-    def get_members(self, instance):
-        return UserSerializer(instance.members, context=self.context, many=True).data
+        fields = ['id', 'name', 'owner', 'members', 'members_count', 'pending_count', 'image', 'moderator']
 
     def get_image(self, instance):
         if instance.image:
@@ -29,13 +24,13 @@ class GroupSerializer(serializers.ModelSerializer):
     def get_count(self, instance):
         return instance.members.count() + 1
 
+    def get_pending_count(self, instance):
+        return PendingMember.objects.filter(group=instance).count()
+
 
 class PendingMembersSerializer(serializers.ModelSerializer):
-    user = serializers.SerializerMethodField('get_user')
+    user = UserSerializer(many=False, read_only=True)
 
     class Meta:
         model = PendingMember
         fields = ['id', 'user', 'group']
-
-    def get_user(self, instance):
-        return UserSerializer(instance.user, context=self.context).data
