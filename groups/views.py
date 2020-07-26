@@ -22,7 +22,9 @@ class GroupViewSet(viewsets.GenericViewSet):
         except MultiValueDictKeyError:
             return response406({'message': 'Złe dane wejściowe'})
         groups = Group.objects.filter(name__contains=search_phrase)
-        groups_data = GroupSerializer(groups, many=True, context={'host': request.get_host()}).data
+        final_groups = [group for group in groups if
+                        (request.user not in group.members.all()) and (group.owner != request.user)]
+        groups_data = GroupSerializer(final_groups, many=True, context={'host': request.get_host()}).data
         paginator = PageNumberPagination()
         data = paginator.paginate_queryset(groups_data, request)
         return paginator.get_paginated_response(data)
@@ -96,7 +98,9 @@ class GroupViewSet(viewsets.GenericViewSet):
         if 'moderator' in request.data.keys():
             user = User.objects.get(id=request.data.get('moderator'))
             group.moderator = user
-            group.save()
+        if 'image' in request.FILES.keys():
+            group.image = request.FILES.get('image')
+        group.save()
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.save()
@@ -143,7 +147,8 @@ class GroupViewSet(viewsets.GenericViewSet):
             group = Group.objects.get(**kwargs)
         except Group.DoesNotExist:
             return response404('Group')
-        if request.user in group.members.all() or request.user == group.owner:
+        pendings = PendingMember.objects.filter(group=group, user=request.user)
+        if request.user in group.members.all() or request.user == group.owner or pendings.exists():
             return response406({'message': 'Jesteś już członkiem tej grupy'})
         pending = PendingMember.objects.create(user=request.user, group=group)
         serializer = PendingMembersSerializer(pending, context={'host': request.get_host()})

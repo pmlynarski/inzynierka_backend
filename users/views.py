@@ -64,6 +64,15 @@ class UsersViewSet(viewsets.GenericViewSet):
     def get_current_user(self, request):
         return response200(UserSerializer(request.user, context={'host': request.get_host()}).data)
 
+    @action(detail=False, methods=['GET'], url_name='get', url_path=r'get/(?P<id>\d+)')
+    def get_by_id(self, request, **kwargs):
+        try:
+            user = User.objects.get(id=kwargs.get('id'))
+        except User.DoesNotExist:
+            return response404('Użytkownik')
+        serializer = UserSerializer(user, context={'host': request.get_host()})
+        return response200(serializer.data)
+
 
 class CustomAuthToken(ObtainAuthToken):
 

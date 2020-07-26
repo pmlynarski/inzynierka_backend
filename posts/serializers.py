@@ -25,8 +25,12 @@ class PostSerializer(serializers.ModelSerializer):
         return None
 
     def get_group(self, instance):
+        if instance.group.moderator:
+            mod_id = instance.group.moderator.id
+        else:
+            mod_id = None
         return {'id': instance.group.id, 'name': instance.group.name, 'owner': instance.group.owner.id,
-                'moderator': instance.group.moderator.id}
+                'moderator': mod_id}
 
 
 class CommentSerializer(serializers.ModelSerializer):
