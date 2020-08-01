@@ -32,11 +32,12 @@ class UsersViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=['put'], url_name='update', url_path='update')
     def update_profile(self, request):
+        user = User.objects.get(id=request.data.get('id'))
         serializer = UserSerializer(data=request.data, instance=request.user, partial=True,
                                     context={'host': request.get_host()})
         if not serializer.is_valid():
             return response406(serializer.errors)
-        serializer.save()
+        serializer.update(user)
         return response200(serializer.data)
 
     @action(detail=False, methods=['POST'], url_name='accept_user', url_path=r'accept/(?P<id>\d+)')
