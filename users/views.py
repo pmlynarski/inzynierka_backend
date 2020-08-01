@@ -37,7 +37,7 @@ class UsersViewSet(viewsets.GenericViewSet):
                                     context={'host': request.get_host()})
         if not serializer.is_valid():
             return response406(serializer.errors)
-        serializer.update(user)
+        serializer.update(user, serializer.validated_data)
         return response200(serializer.data)
 
     @action(detail=False, methods=['POST'], url_name='accept_user', url_path=r'accept/(?P<id>\d+)')
