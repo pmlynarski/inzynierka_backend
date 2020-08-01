@@ -11,4 +11,4 @@ def response200(data):
 
 
 def response404(item_name):
-    return Response(status=status.HTTP_404_NOT_FOUND, data={'message': '{} could not be found'.format(item_name)})
+    return Response(status=status.HTTP_404_NOT_FOUND, data={'message': '{} nie znaleziono'.format(item_name)})
