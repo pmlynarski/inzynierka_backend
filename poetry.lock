@@ -189,6 +189,14 @@ django = ">=1.11"
 
 [[package]]
 category = "main"
+description = "Camel case JSON support for Django REST framework."
+name = "djangorestframework-camel-case"
+optional = false
+python-versions = ">=3.5"
+version = "1.2.0"
+
+[[package]]
+category = "main"
 description = "A featureful, immutable, and correct URL for Python."
 name = "hyperlink"
 optional = false
@@ -468,7 +476,7 @@ test = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
-content-hash = "11c9440fb62b5fb7336ae8b85ecf0e2b36c601f8c0e617d7faffd84f390dcb44"
+content-hash = "fc1c495228141fb477ea60c67e1485e6bdf99160e97ac569cc8bc8b6b934e60d"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -599,6 +607,9 @@ django-cors-headers = [
 djangorestframework = [
     {file = "djangorestframework-3.11.0-py3-none-any.whl", hash = "sha256:05809fc66e1c997fd9a32ea5730d9f4ba28b109b9da71fccfa5ff241201fd0a4"},
     {file = "djangorestframework-3.11.0.tar.gz", hash = "sha256:e782087823c47a26826ee5b6fa0c542968219263fb3976ec3c31edab23a4001f"},
+]
+djangorestframework-camel-case = [
+    {file = "djangorestframework-camel-case-1.2.0.tar.gz", hash = "sha256:9714d43fba5bb654057c29501649684d3d9f11a92319ae417fd4d65e80d1159d"},
 ]
 hyperlink = [
     {file = "hyperlink-19.0.0-py2.py3-none-any.whl", hash = "sha256:ab4a308feb039b04f855a020a6eda3b18ca5a68e6d8f8c899cbe9e653721d04f"},
