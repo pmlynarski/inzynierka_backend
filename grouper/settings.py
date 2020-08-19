@@ -38,10 +38,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'channels',
     'users',
     'groups',
     'posts',
-    'chat'
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -76,6 +77,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'grouper.wsgi.application'
+ASGI_APPLICATION = 'grouper.routing.application'
 
 CORS_ORIGIN_ALLOW_ALL = True
 

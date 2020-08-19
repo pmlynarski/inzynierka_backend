@@ -12,6 +12,7 @@ Pillow = "^7.1.2"
 django-cors-headers = "^3.3.0"
 daphne = "^2.5.0"
 djangorestframework-camel-case = "^1.2.0"
+channels = "^2.4.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

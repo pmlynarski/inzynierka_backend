@@ -83,6 +83,22 @@ version = "1.14.0"
 pycparser = "*"
 
 [[package]]
+category = "main"
+description = "Brings async, event-driven capabilities to Django. Django 2.2 and up only."
+name = "channels"
+optional = false
+python-versions = ">=3.5"
+version = "2.4.0"
+
+[package.dependencies]
+Django = ">=2.2"
+asgiref = ">=3.2,<4.0"
+daphne = ">=2.3,<3.0"
+
+[package.extras]
+tests = ["pytest (>=4.4,<5.0)", "pytest-django (>=3.4,<4.0)", "pytest-asyncio (>=0.10,<1.0)", "async-generator (>=1.10,<2.0)", "async-timeout (>=3.0,<4.0)", "coverage (>=4.5,<5.0)"]
+
+[[package]]
 category = "dev"
 description = "Cross-platform colored terminal text."
 marker = "sys_platform == \"win32\""
@@ -476,7 +492,8 @@ test = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
-content-hash = "fc1c495228141fb477ea60c67e1485e6bdf99160e97ac569cc8bc8b6b934e60d"
+content-hash = "ca73a0617f306c38788a3d688ca00ebace4de742cb8ab3f144dddd0bf02d1d81"
+lock-version = "1.0"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -529,6 +546,10 @@ cffi = [
     {file = "cffi-1.14.0-cp38-cp38-win32.whl", hash = "sha256:675686925a9fb403edba0114db74e741d8181683dcf216be697d208857e04ca8"},
     {file = "cffi-1.14.0-cp38-cp38-win_amd64.whl", hash = "sha256:00789914be39dffba161cfc5be31b55775de5ba2235fe49aa28c148236c4e06b"},
     {file = "cffi-1.14.0.tar.gz", hash = "sha256:2d384f4a127a15ba701207f7639d94106693b6cd64173d6c8988e2c25f3ac2b6"},
+]
+channels = [
+    {file = "channels-2.4.0-py2.py3-none-any.whl", hash = "sha256:80a5ad1962ae039a3dcc0a5cb5212413e66e2f11ad9e9db8004834436daf3400"},
+    {file = "channels-2.4.0.tar.gz", hash = "sha256:08e756406d7165cb32f6fc3090c0643f41ca9f7e0f7fada0b31194662f20f414"},
 ]
 colorama = [
     {file = "colorama-0.4.3-py2.py3-none-any.whl", hash = "sha256:7d73d2a99753107a36ac6b455ee49046802e59d9d076ef8e47b61499fa29afff"},
