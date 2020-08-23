@@ -10,7 +10,7 @@ class ThreadSerializer(serializers.ModelSerializer):
     messages = serializers.SerializerMethodField('get_messages', read_only=True)
 
     def get_messages(self, instance):
-        messages = Message.objects.filter(thread=instance).order_by('date_send')
+        messages = Message.objects.filter(thread=instance).order_by('date_send')[:10]
         if not messages.exists():
             return []
         return MessageSerializer(messages, many=True, context=self.context).data
