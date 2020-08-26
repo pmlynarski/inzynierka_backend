@@ -1,9 +1,10 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 
-from chat.models import Thread
+from chat.models import Thread, Message
 from chat.serializers import ThreadSerializer, MessageSerializer
-from core.responses import response200, response406
+from core.responses import response200, response406, response404
 from users.models import User
 
 
@@ -32,3 +33,23 @@ class ChatViewSet(viewsets.GenericViewSet):
                 return response406({**serializer.errors, 'message': 'Błędne dane'})
             serializer.save()
             return response200(serializer.data)
+
+    @action(detail=False, methods=['GET'], url_name='threads', url_path='threads_list')
+    def threads_list(self, request, **kwargs):
+        user_id = request.user.id
+        threads = Thread.objects.filter(user1_id=user_id).union(Thread.objects.filter(user2_id=user_id))
+        serializer = ThreadSerializer(threads, many=True, context={'host': request.get_host()})
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        data = paginator.paginate_queryset(serializer.data, request)
+        return paginator.get_paginated_response(data=data)
+
+    @action(detail=False, methods=['GET'], url_name='messages', url_path='messages')
+    def messages_list(self, request, *args):
+        thread_id = request.query_params.get('threadId')
+        messages = Message.objects.filter(thread_id=thread_id).order_by('-date_send')
+        serializer = MessageSerializer(messages, context={'host': request.get_host()}, many=True)
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        data = paginator.paginate_queryset(serializer.data, request)
+        return paginator.get_paginated_response(data=data)

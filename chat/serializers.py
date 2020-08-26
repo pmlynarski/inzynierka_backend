@@ -7,20 +7,22 @@ from users.serializers import UserSerializer
 class ThreadSerializer(serializers.ModelSerializer):
     user1 = UserSerializer(many=False, read_only=True)
     user2 = UserSerializer(many=False, read_only=True)
-    messages = serializers.SerializerMethodField('get_messages', read_only=True)
+    last_message = serializers.SerializerMethodField('get_message', read_only=True)
 
-    def get_messages(self, instance):
-        messages = Message.objects.filter(thread=instance).order_by('date_send')
-        if not messages.exists():
-            return []
-        return MessageSerializer(messages, many=True, context=self.context).data
+    def get_message(self, instance):
+        last_message = Message.objects.filter(thread=instance).order_by('date_send')[0]
+        if not last_message:
+            return None
+        return MessageSerializer(last_message, context=self.context).data
 
     class Meta:
         model = Thread
-        fields = ['id', 'user1', 'user2', 'messages']
+        fields = ['id', 'user1', 'user2', 'last_message']
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    sender = UserSerializer(read_only=True, many=False)
+
     class Meta:
         model = Message
         fields = ['id', 'thread', 'content', 'date_send', 'sender']
