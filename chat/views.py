@@ -47,7 +47,7 @@ class ChatViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=['GET'], url_name='messages', url_path='messages')
     def messages_list(self, request, *args):
         thread_id = request.query_params.get('threadId')
-        messages = Message.objects.filter(thread_id=thread_id)
+        messages = Message.objects.filter(thread_id=thread_id).order_by('-date_send')
         serializer = MessageSerializer(messages, context={'host': request.get_host()}, many=True)
         paginator = PageNumberPagination()
         paginator.page_size = 10
