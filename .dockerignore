@@ -5,4 +5,4 @@ pyproject.toml
 
 db.sqlite3
 
-/nginx/
+nginx/
