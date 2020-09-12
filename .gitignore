@@ -91,4 +91,4 @@ db.sqlite3
 media/
 static/
 
-docker-compose.yml
+docker.env
