@@ -2,7 +2,6 @@
 poetry.toml
 poetry.lock
 pyproject.toml
-
 db.sqlite3
-
 nginx/
+.git
