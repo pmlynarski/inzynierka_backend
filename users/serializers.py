@@ -4,7 +4,6 @@ from users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField('get_image')
     role = serializers.SerializerMethodField('get_role')
 
     class Meta:
@@ -31,11 +30,6 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(raw_password=validated_data.get('password'))
         instance.save()
         return instance
-
-    def get_image(self, instance):
-        if instance.image:
-            return 'http://' + self.context.get('host') + '/media/' + str(instance.image)
-        return None
 
     def get_role(self, instance):
         if instance.is_admin:

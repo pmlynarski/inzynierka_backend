@@ -19,7 +19,7 @@ class ChatViewSet(viewsets.GenericViewSet):
                 thread = Thread.objects.get_or_create(request.user, user_2)
             except Thread.DoesNotExist:
                 return response406({'message': 'Nie możesz czatować sam ze sobą!'})
-            serializer = ThreadSerializer(thread, context={'host': request.get_host()})
+            serializer = ThreadSerializer(thread)
             return response200({**serializer.data})
         elif request.method == 'POST':
             user_2 = User.objects.get(id=kwargs.get('id'))
@@ -38,7 +38,7 @@ class ChatViewSet(viewsets.GenericViewSet):
     def threads_list(self, request, **kwargs):
         user_id = request.user.id
         threads = Thread.objects.filter(user1_id=user_id).union(Thread.objects.filter(user2_id=user_id))
-        serializer = ThreadSerializer(threads, many=True, context={'host': request.get_host()})
+        serializer = ThreadSerializer(threads, many=True)
         paginator = PageNumberPagination()
         paginator.page_size = 10
         data = paginator.paginate_queryset(serializer.data, request)
@@ -48,7 +48,7 @@ class ChatViewSet(viewsets.GenericViewSet):
     def messages_list(self, request, *args):
         thread_id = request.query_params.get('threadId')
         messages = Message.objects.filter(thread_id=thread_id).order_by('-date_send')
-        serializer = MessageSerializer(messages, context={'host': request.get_host()}, many=True)
+        serializer = MessageSerializer(messages, many=True)
         paginator = PageNumberPagination()
         paginator.page_size = 10
         data = paginator.paginate_queryset(serializer.data, request)

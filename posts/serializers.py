@@ -7,22 +7,10 @@ from users.serializers import UserSerializer
 class PostSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True, many=False)
     group = serializers.SerializerMethodField('get_group')
-    image = serializers.SerializerMethodField('get_image')
-    file = serializers.SerializerMethodField('get_file')
 
     class Meta:
         model = Post
         fields = ['id', 'content', 'owner', 'group', 'image', 'file', 'date_posted']
-
-    def get_image(self, instance):
-        if instance.image:
-            return 'http://' + self.context.get('host') + '/media/' + str(instance.image)
-        return None
-
-    def get_file(self, instance):
-        if instance.file:
-            return 'http://' + self.context.get('host') + '/media/' + str(instance.file)
-        return None
 
     def get_group(self, instance):
         if instance.group.moderator:

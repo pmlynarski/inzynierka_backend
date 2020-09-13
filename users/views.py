@@ -24,7 +24,7 @@ class UsersViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=['post'], url_name='register', url_path='register')
     def register(self, request):
-        serializer = UserSerializer(data=request.data, context={'host': request.get_host()})
+        serializer = UserSerializer(data=request.data)
         if not serializer.is_valid():
             return response406(serializer.errors)
         serializer.save()
@@ -33,12 +33,11 @@ class UsersViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=['put'], url_name='update', url_path='update')
     def update_profile(self, request):
         user = User.objects.get(id=request.data.get('id'))
-        serializer = UserSerializer(data=request.data, instance=request.user, partial=True,
-                                    context={'host': request.get_host()})
+        serializer = UserSerializer(data=request.data, instance=request.user, partial=True)
         if not serializer.is_valid():
             return response406(serializer.errors)
         serializer.update(user, serializer.validated_data)
-        return response200(UserSerializer(user, context={'host': request.get_host()}).data)
+        return response200(UserSerializer(user).data)
 
     @action(detail=False, methods=['POST'], url_name='accept_user', url_path=r'accept/(?P<id>\d+)')
     def accept_user(self, request, **kwargs):
@@ -46,8 +45,7 @@ class UsersViewSet(viewsets.GenericViewSet):
             instance = User.objects.get(id=kwargs.get('id'))
         except User.DoesNotExist:
             return response404('User')
-        serializer = UserSerializer(instance=instance, data={'active': True}, partial=True,
-                                    context={'host': request.get_host()})
+        serializer = UserSerializer(instance=instance, data={'active': True}, partial=True)
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Złe dane wejściowe'})
         serializer.save()
@@ -58,12 +56,12 @@ class UsersViewSet(viewsets.GenericViewSet):
         users = User.objects.filter(active=False)
         if len(users) == 0:
             return response404('Users')
-        serializer = UserSerializer(users, many=True, context={'host': request.get_host()})
+        serializer = UserSerializer(users, many=True)
         return response200(serializer.data)
 
     @action(detail=False, methods=['GET'], url_name='current_user', url_path='current_user')
     def get_current_user(self, request):
-        return response200(UserSerializer(request.user, context={'host': request.get_host()}).data)
+        return response200(UserSerializer(request.user).data)
 
     @action(detail=False, methods=['GET'], url_name='get', url_path=r'get/(?P<id>\d+)')
     def get_by_id(self, request, **kwargs):
@@ -71,7 +69,7 @@ class UsersViewSet(viewsets.GenericViewSet):
             user = User.objects.get(id=kwargs.get('id'))
         except User.DoesNotExist:
             return response404('Użytkownik')
-        serializer = UserSerializer(user, context={'host': request.get_host()})
+        serializer = UserSerializer(user)
         return response200(serializer.data)
 
 
@@ -84,6 +82,6 @@ class CustomAuthToken(ObtainAuthToken):
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
         return response200({
-            **UserSerializer(user, context={'host': request.get_host()}).data,
+            **UserSerializer(user).data,
             'token': token.key
         })

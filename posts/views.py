@@ -22,7 +22,7 @@ class PostsViewSet(viewsets.GenericViewSet):
             return response404('Group')
         self.check_object_permissions(obj=group, request=request)
         posts = Post.objects.filter(group=group).order_by('date_posted').reverse()
-        serializer = PostSerializer(posts, many=True, context={'host': request.get_host()})
+        serializer = PostSerializer(posts, many=True)
         paginator = PageNumberPagination()
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
@@ -31,7 +31,7 @@ class PostsViewSet(viewsets.GenericViewSet):
     def user_posts_list(self, request, **kwargs):
         posts = Post.objects.none().union(Post.objects.filter(group__members=request.user)).union(
             Post.objects.filter(group__owner=request.user)).order_by('date_posted').reverse()
-        serializer = PostSerializer(posts, many=True, context={'host': request.get_host()})
+        serializer = PostSerializer(posts, many=True)
         paginator = PageNumberPagination()
         paginator.page_size = 5
         data = paginator.paginate_queryset(serializer.data, request)
@@ -44,7 +44,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         except Group.DoesNotExist:
             return response404('Group')
         self.check_object_permissions(request=request, obj=group)
-        serializer = PostSerializer(data=request.data, partial=True, context={'host': request.get_host()})
+        serializer = PostSerializer(data=request.data, partial=True)
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         post = serializer.save(group=group, owner=request.user)
@@ -65,7 +65,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         except Post.DoesNotExist:
             return response404('Post')
         self.check_object_permissions(request=request, obj=post.group)
-        return response200(PostSerializer(post, context={'host': request.get_host()}).data)
+        return response200(PostSerializer(post).data)
 
     @action(methods=['GET'], detail=False, url_name='post_comments', url_path=r'comments/(?P<id>\d+)')
     def get_comments(self, request, **kwargs):
@@ -76,7 +76,7 @@ class PostsViewSet(viewsets.GenericViewSet):
             return paginator.get_paginated_response(data=[])
         comments = Comment.objects.filter(post=post).order_by('date_commented').reverse()
         self.check_object_permissions(request=request, obj=post.group)
-        serializer = CommentSerializer(comments, many=True, context={'host': request.get_host()})
+        serializer = CommentSerializer(comments, many=True)
         paginator.page_size = 10
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
@@ -96,7 +96,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         if image:
             post.image = image
             post.save()
-        serializer = PostSerializer(post, data=request.data, partial=True, context={'host': request.get_host()})
+        serializer = PostSerializer(post, data=request.data, partial=True)
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.update(post, serializer.validated_data)
@@ -119,7 +119,7 @@ class PostsViewSet(viewsets.GenericViewSet):
         except Post.DoesNotExist:
             return response404('Post')
         self.check_object_permissions(request=request, obj=post.group)
-        serializer = CommentSerializer(data=request.data, partial=True, context={'host': request.get_host()})
+        serializer = CommentSerializer(data=request.data, partial=True)
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
         serializer.save(post=post, owner=request.user)
@@ -131,7 +131,7 @@ class PostsViewSet(viewsets.GenericViewSet):
             comment = Comment.objects.get(**kwargs)
         except Comment.DoesNotExist:
             return response404('Comment')
-        serializer = CommentSerializer(comment, data=request.data, partial=True, context={'host': request.get_host()})
+        serializer = CommentSerializer(comment, data=request.data, partial=True)
         self.check_object_permissions(request=request, obj=comment)
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})

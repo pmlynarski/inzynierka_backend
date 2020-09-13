@@ -24,14 +24,14 @@ class GroupViewSet(viewsets.GenericViewSet):
         groups = Group.objects.filter(name__contains=search_phrase)
         final_groups = [group for group in groups if
                         (request.user not in group.members.all()) and (group.owner != request.user)]
-        groups_data = GroupSerializer(final_groups, many=True, context={'host': request.get_host()}).data
+        groups_data = GroupSerializer(final_groups, many=True).data
         paginator = PageNumberPagination()
         data = paginator.paginate_queryset(groups_data, request)
         return paginator.get_paginated_response(data)
 
     @action(methods=['POST'], detail=False, url_name='create_group', url_path='create')
     def create_group(self, request):
-        serializer = GroupSerializer(data=request.data, partial=True, context={'host': request.get_host()})
+        serializer = GroupSerializer(data=request.data, partial=True)
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Złe dane wejściowe'})
         serializer.save(owner=request.user)
@@ -42,7 +42,7 @@ class GroupViewSet(viewsets.GenericViewSet):
         groups = Group.objects.none()
         groups = groups.union(Group.objects.filter(owner=request.user)).union(
             Group.objects.filter(members=request.user))
-        serializer = GroupSerializer(groups, many=True, context={'host': request.get_host()})
+        serializer = GroupSerializer(groups, many=True)
         paginator = PageNumberPagination()
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
@@ -55,7 +55,7 @@ class GroupViewSet(viewsets.GenericViewSet):
             return response404('Grupa')
         self.check_object_permissions(request=request, obj=group)
         members = group.members.all().union(User.objects.filter(id=group.owner.id))
-        serializer = UserSerializer(members, many=True, context={'host': request.get_host()})
+        serializer = UserSerializer(members, many=True)
         paginator = PageNumberPagination()
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
@@ -73,7 +73,7 @@ class GroupViewSet(viewsets.GenericViewSet):
                 members = members.union(User.objects.filter(id=group.owner.id))
         paginator = PageNumberPagination()
         paginator.page_size = 20
-        final = UserSerializer(members, many=True, context={'host': request.get_host()}).data
+        final = UserSerializer(members, many=True).data
         data = paginator.paginate_queryset(final, request)
         return paginator.get_paginated_response(data=data)
 
@@ -85,7 +85,7 @@ class GroupViewSet(viewsets.GenericViewSet):
             return response404('Group')
         self.check_object_permissions(request=request, obj=group)
         return response200(
-            {**GroupSerializer(group, context={'host': request.get_host()}).data, 'message': 'Pomyślnie dodano grupę'})
+            {**GroupSerializer(group).data, 'message': 'Pomyślnie dodano grupę'})
 
     @action(methods=['PUT'], detail=False, url_name='update_group', url_path=r'update/(?P<id>\d+)')
     def update_group(self, request, **kwargs):
@@ -94,7 +94,7 @@ class GroupViewSet(viewsets.GenericViewSet):
         except Group.DoesNotExist:
             return response404('Group')
         self.check_object_permissions(request=request, obj=group)
-        serializer = GroupSerializer(group, data=request.data, partial=True, context={'host': request.get_host()})
+        serializer = GroupSerializer(group, data=request.data, partial=True)
         if 'moderator' in request.data.keys():
             user = User.objects.get(id=request.data.get('moderator'))
             group.moderator = user
@@ -151,7 +151,7 @@ class GroupViewSet(viewsets.GenericViewSet):
         if request.user in group.members.all() or request.user == group.owner or pendings.exists():
             return response406({'message': 'Jesteś już członkiem tej grupy'})
         pending = PendingMember.objects.create(user=request.user, group=group)
-        serializer = PendingMembersSerializer(pending, context={'host': request.get_host()})
+        serializer = PendingMembersSerializer(pending)
         return response200({**serializer.data, 'message': 'Pomyślnie zapisano się na listę oczekujących'})
 
     @action(methods=['POST', 'DELETE'], detail=False, url_name='manage_pending_member',
@@ -181,7 +181,7 @@ class GroupViewSet(viewsets.GenericViewSet):
             return response404('Grupa')
         pendings = PendingMember.objects.filter(group=group)
         users = [pending.user for pending in pendings]
-        serializer = UserSerializer(users, many=True, context={'host': request.get_host()})
+        serializer = UserSerializer(users, many=True)
         paginator = PageNumberPagination()
         final = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(final)
