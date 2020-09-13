@@ -33,6 +33,10 @@ class UsersViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=['put'], url_name='update', url_path='update')
     def update_profile(self, request):
         user = User.objects.get(id=request.data.get('id'))
+        if 'image' in request.data:
+            user.image = request.FILES.get('image')
+            user.save()
+            request.data.pop('image')
         serializer = UserSerializer(data=request.data, instance=request.user, partial=True)
         if not serializer.is_valid():
             return response406(serializer.errors)

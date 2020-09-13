@@ -93,9 +93,11 @@ class PostsViewSet(viewsets.GenericViewSet):
         if file:
             post.file = file
             post.save()
+            request.data.pop('post')
         if image:
             post.image = image
             post.save()
+            request.data.pop('image')
         serializer = PostSerializer(post, data=request.data, partial=True)
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})

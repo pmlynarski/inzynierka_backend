@@ -13,7 +13,7 @@ class ThreadSerializer(serializers.ModelSerializer):
         last_message = Message.objects.filter(thread=instance).order_by('date_send')[0]
         if not last_message:
             return None
-        return MessageSerializer(last_message, context=self.context).data
+        return MessageSerializer(last_message).data
 
     class Meta:
         model = Thread

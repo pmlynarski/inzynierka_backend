@@ -98,8 +98,10 @@ class GroupViewSet(viewsets.GenericViewSet):
         if 'moderator' in request.data.keys():
             user = User.objects.get(id=request.data.get('moderator'))
             group.moderator = user
+            request.data.pop('moderator')
         if 'image' in request.FILES.keys():
             group.image = request.FILES.get('image')
+            request.data.pop('image')
         group.save()
         if not serializer.is_valid():
             return response406({**serializer.errors, 'message': 'Błąd walidacji'})
