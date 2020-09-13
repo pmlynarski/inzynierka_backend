@@ -19,10 +19,10 @@ services:
       - .:/code
     depends_on:
       - db
-    links:
-      - redis
     env_file:
       - docker.env
+    links:
+      - redis
 
   redis:
     image: redis:5

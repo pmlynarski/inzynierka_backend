@@ -11,6 +11,7 @@ then
     echo "PostgreSQL started"
 fi
 
-python manage.py migrate
+python3 manage.py migrate
+python3 manage.py runworker
 
 exec "$@"
