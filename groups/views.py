@@ -161,7 +161,7 @@ class GroupViewSet(viewsets.GenericViewSet):
     def manage_pending_member(self, request, **kwargs):
         try:
             group = Group.objects.get(**kwargs)
-            pending = PendingMember.objects.get(user_id=request.data.get('userId'), group_id=group.id)
+            pending = PendingMember.objects.get(user_id=request.data.get('user_id'), group_id=group.id)
         except Group.DoesNotExist:
             return response404('Group')
         except PendingMember.DoesNotExist:
