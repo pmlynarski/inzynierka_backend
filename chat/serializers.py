@@ -10,10 +10,10 @@ class ThreadSerializer(serializers.ModelSerializer):
     last_message = serializers.SerializerMethodField('get_message', read_only=True)
 
     def get_message(self, instance):
-        last_message = Message.objects.filter(thread=instance).order_by('date_send')[0]
-        if not last_message:
+        messages = Message.objects.filter(thread=instance).order_by('date_send')
+        if not messages:
             return None
-        return MessageSerializer(last_message).data
+        return MessageSerializer(messages[0]).data
 
     class Meta:
         model = Thread
