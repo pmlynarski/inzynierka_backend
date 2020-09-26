@@ -5,7 +5,7 @@ ENV PYTHONUNBUFFERED 1
 ENV LANG C.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PORT=8080
-ENV DEBUG=0
+ENV DEBUG=1
 ENV DJANGO_ALLOWED_HOSTS='127.0.0.1 localhost'
 ENV DATABASE='postgres'
 
@@ -33,9 +33,11 @@ RUN pip3 install --upgrade pip
 
 WORKDIR /code
 
-ADD . /code/
+ADD requirements.txt /code/
 
 RUN pip3 install -r requirements.txt
+
+ADD . /code/
 
 EXPOSE 8080
 
