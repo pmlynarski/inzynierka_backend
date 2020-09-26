@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.utils.datastructures import MultiValueDictKeyError
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -7,7 +8,7 @@ from core.permissions import IsAdminOrIsLecturer, IsAdminOrIsGroupOwnerOrIsGroup
     set_basic_permissions, IsAdminOrIsGroupOwnerOrIsGroupModerator, IsAdminOrIsGroupOwner
 from core.responses import response200, response406, response404
 from groups.models import Group, PendingMember
-from groups.serializers import GroupSerializer, PendingMembersSerializer
+from groups.serializers import GroupSerializer, PendingMembersSerializer, FriendsListSerializer
 from users.models import User
 from users.serializers import UserSerializer
 
@@ -62,19 +63,15 @@ class GroupViewSet(viewsets.GenericViewSet):
 
     @action(methods=['GET'], detail=False, url_name='friends_list', url_path='friends_list')
     def friends_list(self, request):
-        groups = Group.objects.none()
-        members_groups = Group.objects.filter(members=request.user)
-        owner_groups = Group.objects.filter(owner=request.user)
-        groups = groups.union(members_groups).union(owner_groups)
-        members = User.objects.none()
-        for group in groups:
-            members = members.union(group.members.exclude(id=request.user.id))
-            if not group.owner.id == request.user.id:
-                members = members.union(User.objects.filter(id=group.owner.id))
+        groups = Group.objects.filter(Q(owner=request.user) | Q(members=request.user)).distinct()
+        serializer = FriendsListSerializer(groups, many=True)
+        friends = []
+        for group in serializer.data:
+            friends = [*friends, *group.get('members')]
+        serializer = UserSerializer(set(friends), many=True)
         paginator = PageNumberPagination()
         paginator.page_size = 20
-        final = UserSerializer(members, many=True).data
-        data = paginator.paginate_queryset(final, request)
+        data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
 
     @action(methods=['GET'], detail=False, url_name='get_group', url_path=r'(?P<id>\d+)')

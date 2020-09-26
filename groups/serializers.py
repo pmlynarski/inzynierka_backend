@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from groups.models import Group, PendingMember
+from users.models import User
 from users.serializers import UserSerializer
 
 
@@ -20,6 +21,17 @@ class GroupSerializer(serializers.ModelSerializer):
 
     def get_pending_count(self, instance):
         return PendingMember.objects.filter(group=instance).count()
+
+
+class FriendsListSerializer(serializers.ModelSerializer):
+    members = serializers.SerializerMethodField('get_members')
+
+    class Meta:
+        model = Group
+        fields = ['members']
+
+    def get_members(self, instance):
+        return instance.members.all().union(User.objects.filter(id=instance.owner.id))
 
 
 class PendingMembersSerializer(serializers.ModelSerializer):
