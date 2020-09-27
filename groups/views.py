@@ -70,7 +70,7 @@ class GroupViewSet(viewsets.GenericViewSet):
             friends = [*friends, *group.get('members')]
         serializer = UserSerializer(set(friends), many=True)
         paginator = PageNumberPagination()
-        paginator.page_size = 20
+        paginator.page_size = 50
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
 

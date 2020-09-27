@@ -27,7 +27,7 @@ class ChatViewSet(viewsets.GenericViewSet):
         threads = Thread.objects.filter(user1_id=user_id).union(Thread.objects.filter(user2_id=user_id))
         serializer = ThreadSerializer(threads, many=True)
         paginator = PageNumberPagination()
-        paginator.page_size = 10
+        paginator.page_size = 20
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
 
@@ -37,6 +37,6 @@ class ChatViewSet(viewsets.GenericViewSet):
         messages = Message.objects.filter(thread_id=thread_id).order_by('-date_send')
         serializer = MessageSerializer(messages, many=True)
         paginator = PageNumberPagination()
-        paginator.page_size = 10
+        paginator.page_size = 20
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
