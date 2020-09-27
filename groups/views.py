@@ -22,7 +22,7 @@ class GroupViewSet(viewsets.GenericViewSet):
             search_phrase = request.GET['phrase']
         except MultiValueDictKeyError:
             return response406({'message': 'Złe dane wejściowe'})
-        groups = Group.objects.filter(name__contains=search_phrase)
+        groups = Group.objects.filter(name__icontains=search_phrase)
         final_groups = [group for group in groups if
                         (request.user not in group.members.all()) and (group.owner != request.user)]
         groups_data = GroupSerializer(final_groups, many=True).data
