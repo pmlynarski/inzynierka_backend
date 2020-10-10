@@ -35,4 +35,4 @@ urlpatterns = [
                   path('', include(router.urls)),
                   path('admin/', admin.site.urls),
                   url(r'^login/', users_views.CustomAuthToken.as_view()),
-              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+              ]
