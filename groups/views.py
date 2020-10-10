@@ -67,7 +67,7 @@ class GroupViewSet(viewsets.GenericViewSet):
         serializer = FriendsListSerializer(groups, many=True)
         friends = []
         for group in serializer.data:
-            friends = [*friends, *group.get('members')]
+            friends = [*friends, *list(filter(lambda member: member.id != request.user.id, group.get('members')))]
         serializer = UserSerializer(set(friends), many=True)
         paginator = PageNumberPagination()
         paginator.page_size = 50

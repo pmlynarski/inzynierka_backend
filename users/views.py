@@ -1,7 +1,9 @@
+from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from core.permissions import IsAdmin
@@ -14,7 +16,7 @@ class UsersViewSet(viewsets.GenericViewSet):
     queryset = User.objects.all()
 
     def get_permissions(self):
-        admin_actions = ['accept_user', 'unaccepted_users']
+        admin_actions = ['manage_user', 'users_list', 'set_role']
         self.permission_classes = [IsAuthenticated]
         if self.action == 'register':
             self.permission_classes = [AllowAny]
@@ -43,25 +45,34 @@ class UsersViewSet(viewsets.GenericViewSet):
         serializer.update(user, serializer.validated_data)
         return response200(UserSerializer(user).data)
 
-    @action(detail=False, methods=['POST'], url_name='accept_user', url_path=r'accept/(?P<id>\d+)')
-    def accept_user(self, request, **kwargs):
+    @action(detail=False, methods=['PUT'], url_name='manage_user', url_path=r'manage_user')
+    def manage_user(self, request):
         try:
-            instance = User.objects.get(id=kwargs.get('id'))
+            instance = User.objects.get(id=request.data.get('user_id'))
         except User.DoesNotExist:
             return response404('User')
-        serializer = UserSerializer(instance=instance, data={'active': True}, partial=True)
-        if not serializer.is_valid():
-            return response406({**serializer.errors, 'message': 'Złe dane wejściowe'})
-        serializer.save()
+        if request.user.id == instance.id:
+            return response406({'message': 'Nie możesz zablokować sam siebie'})
+        future_activity = False
+        if not instance.is_active:
+            future_activity = True
+        instance.active = future_activity
+        instance.save()
         return response200({'message': 'Pomyślnie aktywowano użytkownika'})
 
-    @action(detail=False, methods=['GET'], url_name='unaccepted_users', url_path='unaccepted_users')
-    def unaccepted_users(self, request):
-        users = User.objects.filter(active=False)
-        if len(users) == 0:
-            return response404('Users')
+    @action(detail=False, methods=['GET'], url_name='users_list', url_path='users_list')
+    def users_list(self, request):
+        sort = request.query_params.get('sort', default='active')
+        phrase = request.query_params.get('filter', default=None)
+        users = User.objects.all().order_by('{}'.format(sort))
+        if phrase:
+            users = users.filter(
+                Q(email__icontains=phrase) | Q(first_name__icontains=phrase) | Q(last_name__icontains=phrase))
         serializer = UserSerializer(users, many=True)
-        return response200(serializer.data)
+        paginator = PageNumberPagination()
+        paginator.page_size = 30
+        data = paginator.paginate_queryset(serializer.data, request)
+        return paginator.get_paginated_response(data=data)
 
     @action(detail=False, methods=['GET'], url_name='current_user', url_path='current_user')
     def get_current_user(self, request):
@@ -75,6 +86,25 @@ class UsersViewSet(viewsets.GenericViewSet):
             return response404('Użytkownik')
         serializer = UserSerializer(user)
         return response200(serializer.data)
+
+    @action(detail=False, methods=['PUT'], url_name="set_role", url_path='set_role')
+    def set_role(self, request):
+        try:
+            user = User.objects.get(id=request.data.get('user_id'))
+        except User.DoesNotExist:
+            return response404('Użytkownik')
+        role = request.data.get('role', 0)
+        if role == 0:
+            user.admin = False
+            user.lecturer = False
+        elif role == 1:
+            user.admin = False
+            user.lecturer = True
+        elif role == 2:
+            user.admin = True
+            user.lecturer = False
+        user.save()
+        return response200({'message': 'Zaktualizowano użytkownika'})
 
 
 class CustomAuthToken(ObtainAuthToken):
