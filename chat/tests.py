@@ -1,5 +1,8 @@
+import json
+
 from django.urls import reverse
 
+from chat.models import Thread
 from core.tests_utils import IAPITestCase
 
 
@@ -13,19 +16,17 @@ class MessageThreadIntegrationTests(IAPITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-    def test__creating_messages(self):
+    def test_creating_or_getting_thread_valid(self):
         self.client.force_authenticate(self.test_user)
-        response = self.client.post(reverse('thread-messages', kwargs={'id': 3}), data={'content': 'Testowy content'})
+        response = self.client.get(reverse('thread-messages', kwargs={'id': self.test_admin.id}))
         self.assertEqual(response.status_code, 200)
-        response = self.client.post(reverse('thread-messages', kwargs={'id': 1}), data={'content': 'Testowy content'})
-        self.assertEqual(response.status_code, 406)
-        response = self.client.post(reverse('thread-messages', kwargs={'id': 3}))
+
+    def test_creating_or_getting_thread_invalid(self):
+        self.client.force_authenticate(self.test_user)
+        response = self.client.get(reverse('thread-messages', kwargs={'id': self.test_user.id}))
         self.assertEqual(response.status_code, 406)
 
-    def test__getting_messages(self):
+    def test_fetching_threads_list(self):
         self.client.force_authenticate(self.test_user)
-        response = self.client.get(reverse('thread-messages', kwargs={'id': 3}))
-        self.assertEqual(response.status_code, 200)
-        response = self.client.get(reverse('thread-messages', kwargs={'id': 1}))
-        self.assertEqual(response.status_code, 406)
-
+        response = self.client.get(reverse('thread-messages-list'))
+        self.assertEqual(json.loads(response.content)['count'], 0)

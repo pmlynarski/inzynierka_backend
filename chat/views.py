@@ -31,7 +31,7 @@ class ChatViewSet(viewsets.GenericViewSet):
         data = paginator.paginate_queryset(serializer.data, request)
         return paginator.get_paginated_response(data=data)
 
-    @action(detail=False, methods=['GET'], url_name='messages', url_path='messages')
+    @action(detail=False, methods=['GET'], url_name='messages-list', url_path='messages')
     def messages_list(self, request, *args):
         thread_id = request.query_params.get('threadId')
         messages = Message.objects.filter(thread_id=thread_id).order_by('-date_send')

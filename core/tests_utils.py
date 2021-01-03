@@ -28,6 +28,7 @@ class IAPITestCase(APITestCase):
 
         cls.test_group = Group.objects.create(name="Test Group", owner=cls.test_lecturer, moderator=cls.test_moderator)
         cls.test_group.members.add(cls.test_user)
+        cls.test_group.members.add(cls.test_moderator)
 
         cls.test_post = Post.objects.create(owner=cls.test_user, content="Testing post", group=cls.test_group)
 
@@ -40,7 +41,7 @@ class IAPITestCase(APITestCase):
         cls.user_to_pending = User.objects.create_user(email='mail@mail.mail', first_name='fsafsa',
                                                        last_name='sadsadsa', password='asdsadsa', is_active=True)
 
-        cls.test_pending_user = PendingMember.objects.create(user=cls.test_user, group=cls.test_group)
+        cls.test_pending_user = PendingMember.objects.create(user=cls.user_to_pending, group=cls.test_group)
 
     def setUp(self):
         print('\n  -------------- Test nr {}-------------- \n '.format(self.counter))

@@ -43,15 +43,10 @@ class PostsAppIntegrationTests(IAPITestCase):
 
     def test_get_post(self):
         self.client.force_authenticate(self.test_user)
-        response = self.client.get(reverse('post-post_details', kwargs={'pk': 1}))
-        self.assertEqual(json.loads(response.content), {'id': 1, 'content': 'Testing post',
-                                                        'owner': {'id': 1, 'email': 'foo@foo.foo', 'first_name': 'Foo',
-                                                                  'last_name': 'Bar', 'is_admin': False,
-                                                                  'is_lecturer': False, 'image': None},
-                                                        'group': {'id': 1, 'name': 'Test Group'}, 'image': None,
-                                                        'file': None})
+        response = self.client.get(reverse('post-post_details', kwargs={'id': 1}))
+        self.assertEqual(json.loads(response.content)['content'], 'Testing post')
         self.assertEqual(response.status_code, 200)
-        response = self.client.get(reverse('post-post_details', kwargs={'pk': 77}))
+        response = self.client.get(reverse('post-post_details', kwargs={'id': 77}))
         self.assertEqual(response.status_code, 404)
 
     def test_update_post(self):
